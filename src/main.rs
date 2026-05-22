@@ -8,6 +8,7 @@ mod color;
 mod element;
 mod particle;
 mod world;
+mod tool;
 
 const WIDTH: usize = 320;
 const HEIGHT: usize = 180;
