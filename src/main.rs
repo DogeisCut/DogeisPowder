@@ -4,6 +4,7 @@ use crate::particle::Particle;
 use crate::world::World;
 use crate::color::Color;
 
+mod game;
 mod color;
 mod element;
 mod particle;

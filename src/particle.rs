@@ -8,7 +8,9 @@ pub struct Particle {
     pub vy: f32,
     pub element: Element,
     pub decoration: Color,
-    pub temperature_kelvin: f32
+    pub temperature_kelvin: f32,
+    pub sub_type: Option<Element>,
+    pub life: Option<f32>,
 } impl Particle {
     pub fn new(x: f32, y: f32, vx: f32, vy: f32, element: Element) -> Self {
         let decoration = {
@@ -40,6 +42,8 @@ pub struct Particle {
             element,
             decoration,
             temperature_kelvin: element.default_temperature_kelvin(),
+            sub_type: None,
+            life: element.default_life()
         }
     }
     pub fn get_grid_x(&self) -> usize {
