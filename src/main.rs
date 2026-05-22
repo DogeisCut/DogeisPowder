@@ -20,6 +20,14 @@ struct Color {
     pub fn new_from_hex_code() -> Self {
         todo!()
     }
+
+    pub fn to_u32(&self) -> u32 {
+        let r = self.r as u32;
+        let g = self.g as u32;
+        let b = self.b as u32;
+        
+        (r << 16) | (g << 8) | b
+    }
 }
 
 enum ElementKind {
@@ -232,10 +240,12 @@ struct World {
                     let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
 
                     if !self.try_move_particle(index, particle.x + bias, particle.y - 1.0) {
-                        if !self.try_move_particle(index, particle.x + bias, particle.y - 1.0) {
-                            if !self.try_move_particle(index, particle.x - bias, particle.y - 1.0) {
-                                if !self.try_move_particle(index, particle.x + bias, particle.y) {
-                                    self.try_move_particle(index, particle.x - bias, particle.y);
+                        if !self.try_move_particle(index, particle.x, particle.y - 1.0) {
+                            if !self.try_move_particle(index, particle.x + bias, particle.y - 1.0) {
+                                if !self.try_move_particle(index, particle.x - bias, particle.y - 1.0) {
+                                    if !self.try_move_particle(index, particle.x + bias, particle.y) {
+                                        self.try_move_particle(index, particle.x - bias, particle.y);
+                                    };
                                 };
                             };
                         };
