@@ -1,4 +1,4 @@
-use crate::{element::StateOfMatter, particle::Particle};
+use crate::{color::Color, element::StateOfMatter, particle::Particle};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CellState {
@@ -57,6 +57,7 @@ pub struct World {
     pub particles_grid: IndexGrid,
     pub edge: Edge,
     pub gravity: Gravity,
+    pub background_color: Color,
 }
 impl World {
     pub fn new(width: usize, height: usize) -> Self {
@@ -65,6 +66,7 @@ impl World {
             particles_grid: IndexGrid::new(width, height),
             edge: Edge::Stop,
             gravity: Gravity::Linear(0.0, 1.0),
+            background_color: Color { value: 0xFF1A1A1A },
         }
     }
 

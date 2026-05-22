@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use crate::game::Game;
 use minifb::{Key, Window, WindowOptions};
 
@@ -5,6 +7,7 @@ mod color;
 mod element;
 mod game;
 mod particle;
+mod shape_utils;
 mod tool;
 mod world;
 
@@ -30,6 +33,14 @@ fn main() {
     let mut screen_buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
 
     while window.is_open() && !window.is_key_pressed(Key::Escape, minifb::KeyRepeat::No) {
+        if let Some((mouse_x, mouse_y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
+            let x = mouse_x as usize;
+            let y = mouse_y as usize;
+
+            game.mouse_x = x;
+            game.mouse_y = y;
+        }
+
         game.tick();
 
         game.render(&mut screen_buffer);

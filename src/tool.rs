@@ -1,15 +1,25 @@
 use crate::{color::Color, element::Element};
 
 pub enum Shape {
-    Oval(u32, u32, f32),
-    Rect(u32, u32, f32),
-    Tri(u32, u32, f32),
+    Oval(usize, usize, f32),
+    Rect(usize, usize, f32),
+    Tri(usize, usize, f32),
 }
 
-pub enum Tool {
-    Smear(Shape, Option<Element>),
-    Replace(Shape, Option<Element>, Option<Element>),
-    Grab(Shape),
-    Temperature(Shape, f32),
-    Color(Shape, Option<Color>),
+pub enum Kind {
+    Smear(Option<Element>),
+    Replace(Option<Element>, Option<Element>),
+    Grab(),
+    Temperature(f32),
+    Color(Option<Color>),
+}
+
+pub struct Tool {
+    pub shape: Shape,
+    pub kind: Kind,
+}
+impl Tool {
+    pub fn new(shape: Shape, kind: Kind) -> Self {
+        Self { shape, kind }
+    }
 }

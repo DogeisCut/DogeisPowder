@@ -84,4 +84,17 @@ impl Color {
             Some((a_out * 255.0) as u8),
         )
     }
+
+    pub fn invert(&self, ignore_alpha: bool) -> Self {
+        Color::new(
+            255 - self.r(),
+            255 - self.g(),
+            255 - self.b(),
+            if ignore_alpha {
+                Some(self.a())
+            } else {
+                Some(255 - self.a())
+            },
+        )
+    }
 }
