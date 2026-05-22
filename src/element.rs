@@ -43,4 +43,11 @@ pub enum Element {
             Element::Wood => 5,
         }
     }
+    pub fn default_temperature_kelvin(&self) -> f32 {
+        match self {
+            Element::Sand => 298.15,
+            Element::Water => 298.15,
+            Element::Wood => 298.15,
+        }
+    }
 }

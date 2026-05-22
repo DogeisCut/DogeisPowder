@@ -40,6 +40,17 @@ pub struct IndexGrid {
     }
 }
 
+enum Edge {
+    Stop,
+    Loop,
+    Destroy
+}
+
+enum Gravity {
+    Linear(f32, f32),
+    Radial(f32, f32, f32)
+}
+
 pub struct World {
     pub particles_flat: Vec<Particle>,
     pub particles_grid: IndexGrid,
