@@ -1,3 +1,5 @@
+use minifb::{Key, Window, WindowOptions};
+
 struct Color {
     r: u8,
     g: u8,
@@ -266,5 +268,52 @@ const WIDTH: usize = 320;
 const HEIGHT: usize = 180;
 
 fn main() {
-    let world: World = World::new();
+    let mut world: World = World::new();
+
+    let mut window = Window::new(
+        "DogeisPowder",
+        WIDTH,
+        HEIGHT,
+        WindowOptions {
+            scale: minifb::Scale::X4,
+            ..WindowOptions::default()
+        },
+    )
+    .unwrap_or_else(|e| {
+        panic!("{}", e);
+    });
+
+    window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+
+    let mut screen_buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
+
+    while window.is_open() && !window.is_key_pressed(Key::Escape, minifb::KeyRepeat::No) {
+        world.particles_flat.push(
+            Particle { x: 100.0, y: 100.0, vx: 0.0, vy: 0.0, element_type: Element::Sand }
+        );
+
+        world.particles_flat.push(
+            Particle { x: 200.0, y: 100.0, vx: 0.0, vy: 0.0, element_type: Element::Water }
+        );
+
+        world.populate_grid();
+        world.update_physics();
+
+        for pixel in screen_buffer.iter_mut() {
+            *pixel = 0x1A1A1A
+        }
+
+        for y in 0..HEIGHT {
+            for x in 0..WIDTH {
+                if let CellState::Occupied(index) = world.particles_grid.get(x as isize, y as isize) {
+                    let particle = world.particles_flat[index];
+                    let color = particle.element_type.color();
+
+                    screen_buffer[x + (y * WIDTH)] = color.to_u32();
+                }
+            }
+        }
+
+        window.update_with_buffer(&screen_buffer, WIDTH, HEIGHT).unwrap();
+    }
 }
