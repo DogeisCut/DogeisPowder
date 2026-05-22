@@ -151,23 +151,52 @@ struct World {
         let target_grid_x = (target_x + 0.5) as isize;
         let target_grid_y = (target_y + 0.5) as isize;
 
-        if self.particles_grid.get(target_grid_x, target_grid_y) == CellState::Empty {
-            let mut particle = self.particles_flat[index];
+        match self.particles_grid.get(target_grid_x, target_grid_y) {
+            CellState::Empty => {
+                let mut particle = self.particles_flat[index];
 
-            let old_grid_x = particle.get_grid_x();
-            let old_grid_y = particle.get_grid_y();
+                let old_grid_x = particle.get_grid_x();
+                let old_grid_y = particle.get_grid_y();
 
-            particle.x += target_x;
-            particle.y += target_y;
+                particle.x = target_x;
+                particle.y = target_y;
 
-            self.particles_flat[index] = particle;
-            
-            self.particles_grid.set(old_grid_x, old_grid_y, None);
-            self.particles_grid.set(target_grid_x as usize, target_grid_y as usize, Some(index));
+                self.particles_flat[index] = particle;
+                
+                self.particles_grid.set(old_grid_x, old_grid_y, None);
+                self.particles_grid.set(target_grid_x as usize, target_grid_y as usize, Some(index));
 
-            true
-        } else {
-            false
+                true
+            },
+            CellState::Occupied(other_index) => {
+                let mut particle = self.particles_flat[index];
+                let mut other_particle = self.particles_flat[other_index];
+
+                if particle.element_type.density() <= other_particle.element_type.density() {
+                    return false;
+                }
+
+                let old_grid_x = particle.get_grid_x();
+                let old_grid_y = particle.get_grid_y();
+
+                let old_x = particle.x;
+                let old_y = particle.y;
+
+                particle.x = target_x;
+                particle.y = target_y;
+
+                other_particle.x = old_x;
+                other_particle.y = old_y;
+
+                self.particles_flat[index] = particle;
+                self.particles_flat[other_index] = other_particle;
+                
+                self.particles_grid.set(target_grid_x as usize, target_grid_y as usize, Some(index));
+                self.particles_grid.set(old_grid_x, old_grid_y, Some(other_index));
+                
+                true
+            },
+            CellState::OutOfBounds => false,
         }
     }
 
