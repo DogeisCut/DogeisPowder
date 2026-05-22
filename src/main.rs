@@ -1,34 +1,90 @@
 use minifb::{Key, Window, WindowOptions};
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct Color {
-    r: u8,
-    g: u8,
-    b: u8
+    value: u32
 } impl Color {
-    pub fn new(r: u8, g: u8, b: u8) -> Self {
+    pub fn new(r: u8, g: u8, b: u8, a: Option<u8>) -> Self {
+
+        let alpha = a.unwrap_or(255) as u32;
+
         Self {
-            r,
-            g,
-            b,
+            value: (alpha << 24) | ((r as u32) << 16) | ((g as u32) << 8) | (b as u32)
         }
-    }
-    pub fn new_from_brightness(brightness: u8) -> Self {
-        Self {
-            r: brightness,
-            g: brightness,
-            b: brightness,
-        }
-    }
-    pub fn new_from_hex_code() -> Self {
-        todo!()
     }
 
-    pub fn to_u32(&self) -> u32 {
-        let r = self.r as u32;
-        let g = self.g as u32;
-        let b = self.b as u32;
-        
-        (r << 16) | (g << 8) | b
+    pub fn a(&self) -> u8 {
+        ((self.value >> 24) & 0xFF) as u8
+    }
+
+    pub fn r(&self) -> u8 {
+        ((self.value >> 16) & 0xFF) as u8
+    }
+
+    pub fn g(&self) -> u8 {
+        ((self.value >> 8) & 0xFF) as u8
+    }
+
+    pub fn b(&self) -> u8 {
+        (self.value & 0xFF) as u8
+    }
+
+    pub fn set_a(&mut self, a: u8) {
+        self.value = (self.value & 0x00FFFFFF) | ((a as u32) << 24);
+    }
+
+    pub fn set_r(&mut self, r: u8) {
+        self.value = (self.value & 0xFF00FFFF) | ((r as u32) << 16);
+    }
+
+    pub fn set_g(&mut self, g: u8) {
+        self.value = (self.value & 0xFFFF00FF) | ((g as u32) << 8);
+    }
+
+    pub fn set_b(&mut self, b: u8) {
+        self.value = (self.value & 0xFFFFFF00) | (b as u32);
+    }
+
+    pub fn mix(&self, other: Color, factor: f32) -> Self {
+        let f = factor.clamp(0.0, 1.0);
+        let inv_f = 1.0 - f;
+
+        // Mix each channel linearly (LERP)
+        let r = ((self.r() as f32 * inv_f) + (other.r() as f32 * f)) as u8;
+        let g = ((self.g() as f32 * inv_f) + (other.g() as f32 * f)) as u8;
+        let b = ((self.b() as f32 * inv_f) + (other.b() as f32 * f)) as u8;
+        let a = ((self.a() as f32 * inv_f) + (other.a() as f32 * f)) as u8;
+
+        Color::new(r, g, b, Some(a))
+    }
+
+    pub fn overlay(&self, other: Color) -> Self {
+        let r_bg = self.r() as f32 / 255.0;
+        let g_bg = self.g() as f32 / 255.0;
+        let b_bg = self.b() as f32 / 255.0;
+        let a_bg = self.a() as f32 / 255.0;
+
+        let r_fg = other.r() as f32 / 255.0;
+        let g_fg = other.g() as f32 / 255.0;
+        let b_fg = other.b() as f32 / 255.0;
+        let a_fg = other.a() as f32 / 255.0;
+
+        let a_out = a_fg + a_bg * (1.0 - a_fg);
+
+        if a_out == 0.0 {
+            return Color::new(0, 0, 0, Some(0));
+        }
+
+        let r_out = (r_fg * a_fg + r_bg * a_bg * (1.0 - a_fg)) / a_out;
+        let g_out = (g_fg * a_fg + g_bg * a_bg * (1.0 - a_fg)) / a_out;
+        let b_out = (b_fg * a_fg + b_bg * a_bg * (1.0 - a_fg)) / a_out;
+
+        Color::new(
+            (r_out * 255.0) as u8,
+            (g_out * 255.0) as u8,
+            (b_out * 255.0) as u8,
+            Some((a_out * 255.0) as u8),
+        )
     }
 }
 
@@ -63,16 +119,16 @@ enum Element {
     }
     pub fn color(&self) -> Color {
         match self {
-            Element::Sand => Color::new(255, 229, 125),
-            Element::Water => Color::new(36, 116, 255),
-            Element::Wood => Color::new(89, 75, 51),
+            Element::Sand => Color::new(255, 229, 125, None),
+            Element::Water => Color::new(36, 116, 255, None),
+            Element::Wood => Color::new(89, 75, 51, None),
         }
     }
-    pub fn color_varries(&self) -> bool {
+    pub fn brightness_varry(&self) -> u8 {
         match self {
-            Element::Sand => true,
-            Element::Water => false,
-            Element::Wood => false,
+            Element::Sand => 10,
+            Element::Water => 0,
+            Element::Wood => 5,
         }
     }
 }
@@ -83,8 +139,40 @@ struct Particle {
     y: f32,
     vx: f32,
     vy: f32,
-    element_type: Element,
+    element: Element,
+    decoration: Color
 } impl Particle {
+    pub fn new(x: f32, y: f32, vx: f32, vy: f32, element: Element) -> Self {
+        let decoration = {
+            let mut new_color = element.color();
+            let br = element.brightness_varry() as i16;
+
+            if br > 0 {
+                let offset_r = rand::random_range(-br..br);
+                let new_r = ((new_color.r() as i16) + offset_r).clamp(0, 255) as u8;
+                new_color.set_r(new_r);
+
+                let offset_g = rand::random_range(-br..br);
+                let new_g = ((new_color.g() as i16) + offset_g).clamp(0, 255) as u8;
+                new_color.set_g(new_g);
+
+                let offset_b = rand::random_range(-br..br);
+                let new_b = ((new_color.b() as i16) + offset_b).clamp(0, 255) as u8;
+                new_color.set_b(new_b);
+            }
+            
+            new_color
+        };
+
+        Self {
+            x,
+            y,
+            vx,
+            vy,
+            element,
+            decoration,
+        }
+    }
     pub fn get_grid_x(&self) -> usize {
         (self.x + 0.5) as usize
     }
@@ -182,7 +270,7 @@ struct World {
                 let mut particle = self.particles_flat[index];
                 let mut other_particle = self.particles_flat[other_index];
 
-                if particle.element_type.density() <= other_particle.element_type.density() {
+                if particle.element.density() <= other_particle.element.density() {
                     return false;
                 }
 
@@ -215,7 +303,7 @@ struct World {
             let mut particle = self.particles_flat[index];
 
 
-            match particle.element_type.kind() {
+            match particle.element.kind() {
                 ElementKind::Powder => {
                     let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
 
@@ -266,6 +354,7 @@ struct World {
 
 const WIDTH: usize = 320;
 const HEIGHT: usize = 180;
+const BG_COLOR: Color = Color { value: 0xFF1A1A1A };
 
 fn main() {
     let mut world: World = World::new();
@@ -289,27 +378,27 @@ fn main() {
 
     while window.is_open() && !window.is_key_pressed(Key::Escape, minifb::KeyRepeat::No) {
         world.particles_flat.push(
-            Particle { x: 100.0, y: 100.0, vx: 0.0, vy: 0.0, element_type: Element::Sand }
+            Particle::new(100.0, 100.0, 0.0, 0.0, Element::Sand)
         );
 
         world.particles_flat.push(
-            Particle { x: 200.0, y: 100.0, vx: 0.0, vy: 0.0, element_type: Element::Water }
+            Particle::new(200.0, 100.0, 0.0, 0.0, Element::Water)
         );
 
         world.populate_grid();
         world.update_physics();
 
         for pixel in screen_buffer.iter_mut() {
-            *pixel = 0x1A1A1A
+            *pixel = BG_COLOR.value
         }
 
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
                 if let CellState::Occupied(index) = world.particles_grid.get(x as isize, y as isize) {
                     let particle = world.particles_flat[index];
-                    let color = particle.element_type.color();
+                    let color = particle.element.color().overlay(particle.decoration);
 
-                    screen_buffer[x + (y * WIDTH)] = color.to_u32();
+                    screen_buffer[x + (y * WIDTH)] = BG_COLOR.overlay(color).value;
                 }
             }
         }
