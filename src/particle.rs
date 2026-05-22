@@ -11,11 +11,12 @@ pub struct Particle {
     pub temperature_kelvin: f32,
     pub sub_type: Option<Element>,
     pub life: Option<f32>,
-} impl Particle {
+}
+impl Particle {
     pub fn new(x: f32, y: f32, vx: f32, vy: f32, element: Element) -> Self {
         let decoration = {
             let mut new_color = element.color();
-            let br = element.brightness_varry() as i16;
+            let br = element.brightness_vary() as i16;
 
             if br > 0 {
                 let offset_r = rand::random_range(-br..br);
@@ -30,7 +31,7 @@ pub struct Particle {
                 let new_b = ((new_color.b() as i16) + offset_b).clamp(0, 255) as u8;
                 new_color.set_b(new_b);
             }
-            
+
             new_color
         };
 
@@ -43,7 +44,7 @@ pub struct Particle {
             decoration,
             temperature_kelvin: element.default_temperature_kelvin(),
             sub_type: None,
-            life: element.default_life()
+            life: element.default_life(),
         }
     }
     pub fn get_grid_x(&self) -> usize {

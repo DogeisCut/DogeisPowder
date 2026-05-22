@@ -4,14 +4,15 @@ use crate::{element::StateOfMatter, particle::Particle};
 pub enum CellState {
     Empty,
     Occupied(usize),
-    OutOfBounds
+    OutOfBounds,
 }
 
 pub struct IndexGrid {
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
     cells: Vec<Option<usize>>,
-} impl IndexGrid {
+}
+impl IndexGrid {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
             width,
@@ -40,37 +41,42 @@ pub struct IndexGrid {
     }
 }
 
-enum Edge {
+pub enum Edge {
     Stop,
     Loop,
-    Destroy
+    Destroy,
 }
 
-enum Gravity {
+pub enum Gravity {
     Linear(f32, f32),
-    Radial(f32, f32, f32)
+    Radial(f32, f32, f32),
 }
 
 pub struct World {
     pub particles_flat: Vec<Particle>,
     pub particles_grid: IndexGrid,
-} impl World {
+    pub edge: Edge,
+    pub gravity: Gravity,
+}
+impl World {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
             particles_flat: Vec::new(),
             particles_grid: IndexGrid::new(width, height),
+            edge: Edge::Stop,
+            gravity: Gravity::Linear(0.0, 1.0),
         }
     }
 
     pub fn populate_grid(&mut self) {
         self.particles_grid.empty();
-        
+
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
-            
+
             let grid_x = particle.get_grid_x();
             let grid_y = particle.get_grid_y();
-            
+
             self.particles_grid.set(grid_x, grid_y, Some(index));
         }
     }
@@ -90,12 +96,16 @@ pub struct World {
                 particle.y = target_y;
 
                 self.particles_flat[index] = particle;
-                
+
                 self.particles_grid.set(old_grid_x, old_grid_y, None);
-                self.particles_grid.set(target_grid_x as usize, target_grid_y as usize, Some(index));
+                self.particles_grid.set(
+                    target_grid_x as usize,
+                    target_grid_y as usize,
+                    Some(index),
+                );
 
                 true
-            },
+            }
             CellState::Occupied(other_index) => {
                 let mut particle = self.particles_flat[index];
                 let mut other_particle = self.particles_flat[other_index];
@@ -118,20 +128,24 @@ pub struct World {
 
                 self.particles_flat[index] = particle;
                 self.particles_flat[other_index] = other_particle;
-                
-                self.particles_grid.set(target_grid_x as usize, target_grid_y as usize, Some(index));
-                self.particles_grid.set(old_grid_x, old_grid_y, Some(other_index));
-                
+
+                self.particles_grid.set(
+                    target_grid_x as usize,
+                    target_grid_y as usize,
+                    Some(index),
+                );
+                self.particles_grid
+                    .set(old_grid_x, old_grid_y, Some(other_index));
+
                 true
-            },
+            }
             CellState::OutOfBounds => false,
         }
     }
 
     pub fn update_physics(&mut self) {
         for index in 0..self.particles_flat.len() {
-            let mut particle = self.particles_flat[index];
-
+            let particle = self.particles_flat[index];
 
             match particle.element.kind() {
                 StateOfMatter::Powder => {
@@ -142,7 +156,7 @@ pub struct World {
                             self.try_move_particle(index, particle.x - bias, particle.y + 1.0);
                         };
                     };
-                },
+                }
                 StateOfMatter::Liquid => {
                     let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
 
@@ -155,29 +169,27 @@ pub struct World {
                             };
                         };
                     };
-                },
+                }
                 StateOfMatter::Gas => {
                     let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
 
                     if !self.try_move_particle(index, particle.x + bias, particle.y - 1.0) {
                         if !self.try_move_particle(index, particle.x, particle.y - 1.0) {
-                            if !self.try_move_particle(index, particle.x + bias, particle.y - 1.0) {
-                                if !self.try_move_particle(index, particle.x - bias, particle.y - 1.0) {
-                                    if !self.try_move_particle(index, particle.x + bias, particle.y) {
-                                        self.try_move_particle(index, particle.x - bias, particle.y);
-                                    };
+                            if !self.try_move_particle(index, particle.x - bias, particle.y - 1.0) {
+                                if !self.try_move_particle(index, particle.x + bias, particle.y) {
+                                    self.try_move_particle(index, particle.x - bias, particle.y);
                                 };
                             };
                         };
                     };
-                },
+                }
                 StateOfMatter::Solid => {
                     // Solids sit still, they don't even move with velocity.
-                },
+                }
                 StateOfMatter::Energy => {
                     // Normally energy particles would move with velocity but we don't have that implemented.
-                },
+                }
             }
-        } 
+        }
     }
 }

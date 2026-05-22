@@ -1,13 +1,13 @@
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Color {
-    pub value: u32
-} impl Color {
+    pub value: u32,
+}
+impl Color {
     pub fn new(r: u8, g: u8, b: u8, a: Option<u8>) -> Self {
-
         let alpha = a.unwrap_or(255) as u32;
 
         Self {
-            value: (alpha << 24) | ((r as u32) << 16) | ((g as u32) << 8) | (b as u32)
+            value: (alpha << 24) | ((r as u32) << 16) | ((g as u32) << 8) | (b as u32),
         }
     }
 

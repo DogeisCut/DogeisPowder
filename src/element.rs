@@ -5,7 +5,7 @@ pub enum StateOfMatter {
     Liquid,
     Gas,
     Solid,
-    Energy
+    Energy,
 }
 
 pub enum ValueReaction<T> {
@@ -13,14 +13,14 @@ pub enum ValueReaction<T> {
     Transition(T, Option<Element>, Option<Element>),
 }
 
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Element {
     Sand,
     Water,
     Wood,
     Ice,
-} impl Element {
+}
+impl Element {
     pub fn density(&self) -> f32 {
         match self {
             // These numbers are based on real life g/cm3
@@ -46,7 +46,7 @@ pub enum Element {
             Element::Ice => Color::new(128, 185, 255, None),
         }
     }
-    pub fn brightness_varry(&self) -> u8 {
+    pub fn brightness_vary(&self) -> u8 {
         match self {
             Element::Sand => 10,
             Element::Water => 0,
@@ -64,21 +64,26 @@ pub enum Element {
     }
     pub fn low_temperature_reaction(&self) -> ValueReaction<f32> {
         match self {
-            Element::Sand => ValueReaction::None, 
-            Element::Water => ValueReaction::Transition(273.15, Some(Element::Ice), Some(Element::Water)),
+            Element::Sand => ValueReaction::None,
+            Element::Water => {
+                ValueReaction::Transition(273.15, Some(Element::Ice), Some(Element::Water))
+            }
             Element::Wood => ValueReaction::None,
             Element::Ice => ValueReaction::None,
         }
     }
     pub fn high_temperature_reaction(&self) -> ValueReaction<f32> {
         match self {
-            Element::Sand => todo!(), // ValueReaction::Transition(1_986.0, Some(Element::Lava), Some(Element::Glass))
-            Element::Water => todo!(), // ValueReaction::Transition(373.15, Some(Element::Steam), Some(Element::Water))
-            Element::Wood => todo!(), // ValueReaction::Transition(612.0, Some(Element::Charcoal), None) // Further heated charcoal turns to ash at 723.0
-            Element::Ice => ValueReaction::Transition(273.15, Some(Element::Water), Some(Element::Ice)),
+            Element::Sand => ValueReaction::None, //TODO: ValueReaction::Transition(1_986.0, Some(Element::Lava), Some(Element::Glass))
+            Element::Water => ValueReaction::None, //TODO: ValueReaction::Transition(373.15, Some(Element::Steam), Some(Element::Water))
+            Element::Wood => ValueReaction::None, //TODO: ValueReaction::Transition(612.0, Some(Element::Charcoal), None) // Further heated charcoal turns to ash at 723.0
+            Element::Ice => {
+                ValueReaction::Transition(273.15, Some(Element::Water), Some(Element::Ice))
+            }
         }
     }
-    pub fn ionization_tempature(&self) -> Option<f32> { // this is only an option because plasma itself wont be ionizing
+    pub fn ionization_temperature(&self) -> Option<f32> {
+        // this is only an option because plasma itself wont be ionizing
         match self {
             Element::Sand => Some(22_500.0),
             Element::Water => Some(12_000.0),
