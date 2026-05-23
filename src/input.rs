@@ -5,6 +5,8 @@ use std::hash::{Hash, Hasher};
 #[derive(Debug, Hash, Eq, PartialEq, Clone, Copy)]
 pub enum Action {
     UseTool,
+    UseSecondaryTool,
+    UseTrinaryTool,
     EnlargeToolShape,
     ShrinkToolShape,
     SwitchToolShape,

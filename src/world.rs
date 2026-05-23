@@ -13,6 +13,7 @@ pub enum CellState {
     OutOfBounds,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ParticleSpawnMode {
     Overlap,
     Override,

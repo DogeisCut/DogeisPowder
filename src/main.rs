@@ -43,6 +43,14 @@ fn main() {
         input::RawInput::Mouse(minifb::MouseButton::Left),
     );
     input_map.add_action_event(
+        input::Action::UseSecondaryTool,
+        input::RawInput::Mouse(minifb::MouseButton::Right),
+    );
+    input_map.add_action_event(
+        input::Action::UseTrinaryTool,
+        input::RawInput::Mouse(minifb::MouseButton::Middle),
+    );
+    input_map.add_action_event(
         input::Action::SwitchToolShape,
         input::RawInput::Keyboard(Key::Tab),
     );

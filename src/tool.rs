@@ -5,7 +5,7 @@ use crate::{
     element::Element,
     input::{Action, InputState},
     shape_utils,
-    world::World,
+    world::{ParticleSpawnMode, World},
 };
 
 const TOOL_SIZE_MIN: usize = 1;
@@ -75,69 +75,6 @@ impl Shape {
             Shape::Tri(width, height, _rotation) => {} // TODO
         }
     }
-}
-
-pub enum Kind {
-    Smear(Option<Element>, bool),
-    Replace(Option<Element>, Option<Element>),
-    Grab(),
-    Thermal(f32),
-    Color(Option<Color>),
-}
-
-pub struct Tool {
-    pub shape: Shape,
-    pub kind: Kind,
-    pub last_mouse_pos: Option<(f32, f32)>,
-}
-impl Tool {
-    pub fn new(shape: Shape, kind: Kind) -> Self {
-        Self {
-            shape,
-            kind,
-            last_mouse_pos: None,
-        }
-    }
-    pub fn update(&mut self, world: &mut World, input: &InputState) {
-        if input.is_action_pressed(Action::EnlargeToolShape) {
-            self.shape.scale_by(1);
-        }
-        if input.is_action_pressed(Action::ShrinkToolShape) {
-            self.shape.scale_by(-1);
-        }
-        if input.is_action_just_pressed(Action::SwitchToolShape) {
-            self.shape.cycle_forward();
-        }
-        if input.is_action_pressed(Action::UseTool) {
-            match self.kind {
-                Kind::Smear(element, override_elements) => {
-                    let current_pos = self.last_mouse_pos.unwrap_or(input.mouse_pos);
-
-                    shape_utils::line(
-                        (current_pos.0) as usize,
-                        (current_pos.1) as usize,
-                        (input.mouse_pos.0) as usize,
-                        (input.mouse_pos.1) as usize,
-                        |start_x, start_y| {
-                            self.shape.for_each_point(false, |offset_x, offset_y| {
-                                world.spawn_particle(
-                                    Element::Water,
-                                    start_x as f32 + offset_x,
-                                    start_y as f32 + offset_y,
-                                    crate::world::ParticleSpawnMode::EmptyOnly,
-                                );
-                            });
-                        },
-                    );
-                }
-                Kind::Replace(from, to) => todo!(),
-                Kind::Grab() => todo!(),
-                Kind::Thermal(by_temp) => todo!(),
-                Kind::Color(color) => todo!(),
-            }
-        }
-        self.last_mouse_pos = Some(input.mouse_pos)
-    }
 
     pub fn render_preview(
         &self,
@@ -146,7 +83,7 @@ impl Tool {
         screen_height: usize,
         mouse_pos: (f32, f32),
     ) {
-        self.shape.for_each_point(true, |offset_x, offset_y| {
+        self.for_each_point(true, |offset_x, offset_y| {
             let render_x = (mouse_pos.0 + 0.5 + offset_x) as isize;
             let render_y = (mouse_pos.1 + 0.5 + offset_y) as isize;
 
@@ -163,5 +100,76 @@ impl Tool {
                 .value;
             }
         });
+    }
+}
+
+pub enum Kind {
+    None,
+    Smear(Element, ParticleSpawnMode),
+    Erase(),
+    Replace(Option<Element>, Option<Element>),
+    Grab(),
+    Thermalize(f32),
+    Color(Option<Color>),
+    Picker(),
+    ColorPicker(),
+}
+
+pub struct Tool {
+    pub kind: Kind,
+    pub use_action: Action,
+    pub last_mouse_pos: Option<(f32, f32)>,
+}
+impl Tool {
+    pub fn new(kind: Kind, use_action: Action) -> Self {
+        Self {
+            kind,
+            use_action,
+            last_mouse_pos: None,
+        }
+    }
+    pub fn update(&mut self, shape: &mut Shape, world: &mut World, input: &InputState) {
+        if input.is_action_pressed(Action::EnlargeToolShape) {
+            shape.scale_by(1);
+        }
+        if input.is_action_pressed(Action::ShrinkToolShape) {
+            shape.scale_by(-1);
+        }
+        if input.is_action_just_pressed(Action::SwitchToolShape) {
+            shape.cycle_forward();
+        }
+        if input.is_action_pressed(self.use_action) {
+            match self.kind {
+                Kind::None => {}
+                Kind::Smear(element, spawn_mode) => {
+                    let current_pos = self.last_mouse_pos.unwrap_or(input.mouse_pos);
+
+                    shape_utils::line(
+                        (current_pos.0) as usize,
+                        (current_pos.1) as usize,
+                        (input.mouse_pos.0) as usize,
+                        (input.mouse_pos.1) as usize,
+                        |start_x, start_y| {
+                            shape.for_each_point(false, |offset_x, offset_y| {
+                                world.spawn_particle(
+                                    element,
+                                    start_x as f32 + offset_x,
+                                    start_y as f32 + offset_y,
+                                    spawn_mode,
+                                );
+                            });
+                        },
+                    );
+                }
+                Kind::Replace(from, to) => todo!(),
+                Kind::Grab() => todo!(),
+                Kind::Thermalize(by_temp) => todo!(),
+                Kind::Color(color) => todo!(),
+                Kind::Picker() => todo!(),
+                Kind::ColorPicker() => todo!(),
+                Kind::Erase() => todo!(),
+            }
+        }
+        self.last_mouse_pos = Some(input.mouse_pos)
     }
 }
