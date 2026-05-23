@@ -1,4 +1,4 @@
-use crate::{color::Color, element::Element};
+use crate::{color::Color, element::Element, world::f32_to_grid};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Particle {
@@ -50,9 +50,9 @@ impl Particle {
         }
     }
     pub fn get_grid_x(&self) -> usize {
-        (self.x + 0.5) as usize
+        f32_to_grid(self.x)
     }
     pub fn get_grid_y(&self) -> usize {
-        (self.y + 0.5) as usize
+        f32_to_grid(self.y)
     }
 }

@@ -101,10 +101,10 @@ impl World {
     }
 
     pub fn try_move_particle(&mut self, index: usize, target_x: f32, target_y: f32) -> bool {
-        let target_grid_x = (target_x + 0.5) as isize;
-        let target_grid_y = (target_y + 0.5) as isize;
+        let target_grid_x = f32_to_grid(target_x);
+        let target_grid_y = f32_to_grid(target_y);
 
-        match self.particles_grid.get(target_grid_x, target_grid_y) {
+        match self.particles_grid.get(target_grid_x as isize, target_grid_y as isize) {
             CellState::Empty => {
                 let mut particle = self.particles_flat[index];
 
@@ -118,8 +118,8 @@ impl World {
 
                 self.particles_grid.set(old_grid_x, old_grid_y, None);
                 self.particles_grid.set(
-                    target_grid_x as usize,
-                    target_grid_y as usize,
+                    target_grid_x,
+                    target_grid_y,
                     Some(index),
                 );
 
@@ -153,8 +153,8 @@ impl World {
                 self.particles_flat[other_index] = other_particle;
 
                 self.particles_grid.set(
-                    target_grid_x as usize,
-                    target_grid_y as usize,
+                    target_grid_x,
+                    target_grid_y,
                     Some(index),
                 );
                 self.particles_grid
@@ -209,35 +209,35 @@ impl World {
         y: f32,
         particle_spawn_mode: ParticleSpawnMode,
     ) {
-        let target_grid_x = (x + 0.5) as isize;
-        let target_grid_y = (y + 0.5) as isize;
+        let target_grid_x = f32_to_grid(x);
+        let target_grid_y = f32_to_grid(y);
         match particle_spawn_mode {
             ParticleSpawnMode::Overlap => {
                 self.particles_flat
                     .push(Particle::new(element, x, y, 0.0, 0.0));
                 self.particles_grid.set(
-                    target_grid_x as usize,
-                    target_grid_y as usize,
+                    target_grid_x,
+                    target_grid_y,
                     Some(self.particles_flat.len() - 1),
                 );
             }
             ParticleSpawnMode::Override => {
-                self.kill_particle_at(target_grid_x, target_grid_y);
+                self.kill_particle_at(target_grid_x as isize, target_grid_y as isize);
                 self.particles_flat
                     .push(Particle::new(element, x, y, 0.0, 0.0));
                 self.particles_grid.set(
-                    target_grid_x as usize,
-                    target_grid_y as usize,
+                    target_grid_x,
+                    target_grid_y,
                     Some(self.particles_flat.len() - 1),
                 );
             }
             ParticleSpawnMode::EmptyOnly => {
-                if self.particles_grid.get(target_grid_x, target_grid_y) == CellState::Empty {
+                if self.particles_grid.get(target_grid_x as isize, target_grid_y as isize) == CellState::Empty {
                     self.particles_flat
                         .push(Particle::new(element, x, y, 0.0, 0.0));
                     self.particles_grid.set(
-                        target_grid_x as usize,
-                        target_grid_y as usize,
+                        target_grid_x,
+                        target_grid_y,
                         Some(self.particles_flat.len() - 1),
                     );
                 }
@@ -335,4 +335,8 @@ impl World {
             }
         }
     }
+}
+
+pub fn f32_to_grid(float: f32) -> usize {
+    (float).floor() as usize
 }

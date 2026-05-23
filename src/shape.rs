@@ -1,4 +1,4 @@
-use crate::{color::Color, raster};
+use crate::{color::Color, raster, world::f32_to_grid};
 
 const SIZE_MIN: usize = 1;
 const SIZE_MAX: usize = 500;
@@ -89,14 +89,10 @@ impl Shape {
         mouse_pos: (f32, f32),
     ) {
         self.for_each_point(true, |offset_x, offset_y| {
-            let render_x = (mouse_pos.0 + offset_x) as isize;
-            let render_y = (mouse_pos.1 + offset_y) as isize;
+            let render_x = f32_to_grid(mouse_pos.0 + offset_x);
+            let render_y = f32_to_grid(mouse_pos.1 + offset_y);
 
-            if render_x >= 0
-                && render_x < screen_width as isize
-                && render_y >= 0
-                && render_y < screen_height as isize
-            {
+            if render_x < screen_width && render_y < screen_height {
                 let idx = render_x as usize + (render_y as usize * screen_width);
                 screen_buffer[idx] = Color {
                     value: screen_buffer[idx],
