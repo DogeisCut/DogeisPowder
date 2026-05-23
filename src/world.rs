@@ -1,10 +1,22 @@
-use crate::{color::Color, element::StateOfMatter, particle::Particle};
+use minifb::KeyRepeat::No;
+
+use crate::{
+    color::Color,
+    element::{Element, StateOfMatter},
+    particle::Particle,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CellState {
     Empty,
     Occupied(usize),
     OutOfBounds,
+}
+
+pub enum ParticleSpawnMode {
+    Overlap,
+    Override,
+    EmptyOnly,
 }
 
 pub struct IndexGrid {
@@ -145,6 +157,56 @@ impl World {
         }
     }
 
+    pub fn try_move_particle_by(&mut self, index: usize, by_x: f32, by_y: f32) -> bool {
+        let particle = self.particles_flat[index];
+        self.try_move_particle(index, particle.x + by_x, particle.y + by_y)
+    }
+
+    pub fn spawn_particle(
+        &mut self,
+        element: Element,
+        x: f32,
+        y: f32,
+        particle_spawn_mode: ParticleSpawnMode,
+    ) {
+        let target_grid_x = (x + 0.5) as isize;
+        let target_grid_y = (y + 0.5) as isize;
+        match particle_spawn_mode {
+            ParticleSpawnMode::Overlap => {
+                self.particles_flat
+                    .push(Particle::new(element, x, y, 0.0, 0.0));
+                self.particles_grid.set(
+                    target_grid_x as usize,
+                    target_grid_y as usize,
+                    Some(self.particles_flat.len() - 1),
+                );
+            }
+            ParticleSpawnMode::Override => {
+                self.particles_flat
+                    .remove(x as usize + (y as usize * self.particles_grid.width));
+
+                self.particles_flat
+                    .push(Particle::new(element, x, y, 0.0, 0.0));
+                self.particles_grid.set(
+                    target_grid_x as usize,
+                    target_grid_y as usize,
+                    Some(self.particles_flat.len() - 1),
+                );
+            }
+            ParticleSpawnMode::EmptyOnly => {
+                if self.particles_grid.get(target_grid_x, target_grid_y) == CellState::Empty {
+                    self.particles_flat
+                        .push(Particle::new(element, x, y, 0.0, 0.0));
+                    self.particles_grid.set(
+                        target_grid_x as usize,
+                        target_grid_y as usize,
+                        Some(self.particles_flat.len() - 1),
+                    );
+                }
+            }
+        }
+    }
+
     pub fn update_physics(&mut self) {
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
@@ -153,20 +215,20 @@ impl World {
                 StateOfMatter::Powder => {
                     let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
 
-                    if !self.try_move_particle(index, particle.x, particle.y + 1.0) {
-                        if !self.try_move_particle(index, particle.x + bias, particle.y + 1.0) {
-                            self.try_move_particle(index, particle.x - bias, particle.y + 1.0);
+                    if !self.try_move_particle_by(index, 0.0, 1.0) {
+                        if !self.try_move_particle_by(index, bias, 1.0) {
+                            self.try_move_particle_by(index, -bias, 1.0);
                         };
                     };
                 }
                 StateOfMatter::Liquid => {
                     let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
 
-                    if !self.try_move_particle(index, particle.x, particle.y + 1.0) {
-                        if !self.try_move_particle(index, particle.x + bias, particle.y + 1.0) {
-                            if !self.try_move_particle(index, particle.x - bias, particle.y + 1.0) {
-                                if !self.try_move_particle(index, particle.x + bias, particle.y) {
-                                    self.try_move_particle(index, particle.x - bias, particle.y);
+                    if !self.try_move_particle_by(index, 0.0, 1.0) {
+                        if !self.try_move_particle_by(index, bias, 1.0) {
+                            if !self.try_move_particle_by(index, -bias, 1.0) {
+                                if !self.try_move_particle_by(index, bias, 0.0) {
+                                    self.try_move_particle_by(index, -bias, 0.0);
                                 };
                             };
                         };
@@ -175,11 +237,11 @@ impl World {
                 StateOfMatter::Gas => {
                     let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
 
-                    if !self.try_move_particle(index, particle.x + bias, particle.y - 1.0) {
-                        if !self.try_move_particle(index, particle.x, particle.y - 1.0) {
-                            if !self.try_move_particle(index, particle.x - bias, particle.y - 1.0) {
-                                if !self.try_move_particle(index, particle.x + bias, particle.y) {
-                                    self.try_move_particle(index, particle.x - bias, particle.y);
+                    if !self.try_move_particle_by(index, bias, -1.0) {
+                        if !self.try_move_particle_by(index, 0.0, -1.0) {
+                            if !self.try_move_particle_by(index, -bias, -1.0) {
+                                if !self.try_move_particle_by(index, bias, 0.0) {
+                                    self.try_move_particle_by(index, -bias, 0.0);
                                 };
                             };
                         };

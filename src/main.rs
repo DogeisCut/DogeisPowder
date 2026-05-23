@@ -1,11 +1,15 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use crate::game::Game;
+use crate::{
+    game::Game,
+    input::{InputMap, InputState},
+};
 use minifb::{Key, Window, WindowOptions};
 
 mod color;
 mod element;
 mod game;
+mod input;
 mod particle;
 mod shape_utils;
 mod tool;
@@ -29,21 +33,29 @@ fn main() {
     .expect("Failed to create window :(");
 
     window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+    //window.limit_update_rate(None);
 
     let mut screen_buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
+    let mut input_map = InputMap::new();
+
+    input_map.add_action_event(
+        input::Action::UseTool,
+        input::RawInput::Mouse(minifb::MouseButton::Left),
+    );
+    input_map.add_action_event(
+        input::Action::SwitchToolShape,
+        input::RawInput::Keyboard(Key::Tab),
+    );
+    input_map.add_action_event(input::Action::EnlargeToolShape, input::RawInput::ScrollUp);
+    input_map.add_action_event(input::Action::ShrinkToolShape, input::RawInput::ScrollDown);
+
+    let mut input_state = InputState::default();
 
     while window.is_open() && !window.is_key_pressed(Key::Escape, minifb::KeyRepeat::No) {
-        if let Some((mouse_x, mouse_y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
-            let x = mouse_x as usize;
-            let y = mouse_y as usize;
+        input_state.update(&window, &input_map);
 
-            game.mouse_x = x;
-            game.mouse_y = y;
-        }
-
-        game.tick();
-
-        game.render(&mut screen_buffer);
+        game.tick(&input_state);
+        game.render(&mut screen_buffer, &input_state);
 
         window
             .update_with_buffer(&screen_buffer, WIDTH, HEIGHT)

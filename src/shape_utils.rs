@@ -63,7 +63,8 @@ where
 
     if border_only {
         // TODO: fix weird holes at the cardinals of the oval...
-        
+        // this border only formula seems fundimentally flawed honestly, it doesnt match with the filled oval
+
         let rx_i = rx as isize;
         let ry_i = ry as isize;
 

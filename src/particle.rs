@@ -13,7 +13,7 @@ pub struct Particle {
     pub life: Option<f32>,
 }
 impl Particle {
-    pub fn new(x: f32, y: f32, vx: f32, vy: f32, element: Element) -> Self {
+    pub fn new(element: Element, x: f32, y: f32, vx: f32, vy: f32) -> Self {
         let decoration = {
             let mut new_color = element.color();
             let br = element.brightness_vary() as i16;
