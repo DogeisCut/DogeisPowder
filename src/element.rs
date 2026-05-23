@@ -1,4 +1,6 @@
-use crate::color::Color;
+use rand::seq::index;
+
+use crate::{color::Color, particle::Particle, world::{self, World}};
 
 pub enum StateOfMatter {
     Powder,
@@ -20,7 +22,16 @@ pub enum Element {
     Wood,
     Ice,
 }
+
 impl Element {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Element::Sand => "Sand",
+            Element::Water => "Water",
+            Element::Wood => "Wood",
+            Element::Ice => "Ice",
+        }
+    }
     pub fn density(&self) -> f32 {
         match self {
             // These numbers are based on real life g/cm3
@@ -49,27 +60,22 @@ impl Element {
     pub fn brightness_vary(&self) -> u8 {
         match self {
             Element::Sand => 10,
-            Element::Water => 0,
             Element::Wood => 5,
-            Element::Ice => 0,
+            _ => 0,
         }
     }
-    pub fn default_temperature_kelvin(&self) -> f32 {
+    pub fn temperature_kelvin(&self) -> f32 {
         match self {
-            Element::Sand => 298.15,
-            Element::Water => 298.15,
-            Element::Wood => 298.15,
             Element::Ice => 273.15,
+            _ => 298.15
         }
     }
     pub fn low_temperature_reaction(&self) -> ValueReaction<f32> {
         match self {
-            Element::Sand => ValueReaction::None,
             Element::Water => {
                 ValueReaction::Transition(273.15, Some(Element::Ice), Some(Element::Water))
-            }
-            Element::Wood => ValueReaction::None,
-            Element::Ice => ValueReaction::None,
+            },
+            _ => ValueReaction::None,
         }
     }
     pub fn high_temperature_reaction(&self) -> ValueReaction<f32> {
@@ -79,7 +85,8 @@ impl Element {
             Element::Wood => ValueReaction::None, //TODO: ValueReaction::Transition(612.0, Some(Element::Charcoal), None) // Further heated charcoal turns to ash at 723.0
             Element::Ice => {
                 ValueReaction::Transition(273.15, Some(Element::Water), Some(Element::Ice))
-            }
+            },
+            _ => ValueReaction::None,
         }
     }
     pub fn ionization_temperature(&self) -> Option<f32> {
@@ -89,22 +96,40 @@ impl Element {
             Element::Water => Some(12_000.0),
             Element::Wood => Some(10_000.0),
             Element::Ice => Some(12_000.0),
+            _=> Some(15000.0),
         }
     }
-    pub fn default_life(&self) -> Option<f32> {
+    pub fn life(&self) -> Option<f32> {
         match self {
-            Element::Sand => None,
-            Element::Water => None,
-            Element::Wood => None,
-            Element::Ice => None,
+            _ => None,
         }
     }
-    pub fn flammable(&self) -> bool {
+    pub fn flamability(&self) -> usize {
         match self {
-            Element::Sand => false,
-            Element::Water => false,
-            Element::Wood => true,
-            Element::Ice => false,
+            Element::Wood => 2,
+            _ => 0,
+        }
+    }
+
+    // TODO: tombstone approach for deleting particles. we dont want index panics for element behaviors :/
+    pub fn pre_tick(&self, index: usize, particle: Particle, world: &mut World) {
+        match self {
+            _ => {},
+        }
+    }
+    pub fn physics_tick(&self, index: usize, particle: Particle, world: &mut World) {
+        match self {
+            _ => {},
+        }
+    }
+    pub fn post_tick(&self, index: usize, particle: Particle, world: &mut World) {
+        match self {
+            _ => {},
+        }
+    }
+    pub fn on_physics_move_attempt(&self, index: usize, particle: Particle, world: &mut World, new_x: f32, new_y: f32) {
+        match self {
+            _ => {},
         }
     }
 }

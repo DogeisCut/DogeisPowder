@@ -3,7 +3,7 @@ use minifb::KeyRepeat::No;
 use crate::{
     color::Color,
     element::{Element, StateOfMatter},
-    particle::Particle,
+    particle::{self, Particle},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -118,6 +118,8 @@ impl World {
                     target_grid_y as usize,
                     Some(index),
                 );
+                
+                particle.element.on_physics_move_attempt(index, particle, self, target_x, target_y);
 
                 true
             }
@@ -151,16 +153,46 @@ impl World {
                 );
                 self.particles_grid
                     .set(old_grid_x, old_grid_y, Some(other_index));
+                
+                particle.element.on_physics_move_attempt(index, particle, self, target_x, target_y);
 
                 true
             }
-            CellState::OutOfBounds => false,
+            CellState::OutOfBounds => {
+                // TODO: handle different edge types
+                
+                let particle = self.particles_flat[index];
+                particle.element.on_physics_move_attempt(index, particle, self, target_x, target_y);
+
+                false
+            },
         }
     }
 
     pub fn try_move_particle_by(&mut self, index: usize, by_x: f32, by_y: f32) -> bool {
         let particle = self.particles_flat[index];
         self.try_move_particle(index, particle.x + by_x, particle.y + by_y)
+    }
+
+    pub fn remove_particle_by_index(&mut self, index: usize) {
+        let particle = self.particles_flat[index];
+        self.particles_grid.set(particle.get_grid_x(), particle.get_grid_y(), None);
+
+        let last_index = self.particles_flat.len() - 1;
+
+        if index != last_index {
+            self.particles_flat.swap_remove(index);
+            let moved = self.particles_flat[index];
+            self.particles_grid.set(moved.get_grid_x(), moved.get_grid_y(), Some(index))
+        } else {
+            self.particles_flat.pop();
+        }
+    }
+
+    pub fn remove_particle_at(&mut self, grid_x: isize, grid_y: isize) {
+        if let CellState::Occupied(index) = self.particles_grid.get(grid_x, grid_y) {
+            self.remove_particle_by_index(index);
+        }
     }
 
     pub fn spawn_particle(
@@ -183,9 +215,7 @@ impl World {
                 );
             }
             ParticleSpawnMode::Override => {
-                self.particles_flat
-                    .remove(x as usize + (y as usize * self.particles_grid.width));
-
+                self.remove_particle_at(target_grid_x, target_grid_y);
                 self.particles_flat
                     .push(Particle::new(element, x, y, 0.0, 0.0));
                 self.particles_grid.set(
@@ -209,6 +239,10 @@ impl World {
     }
 
     pub fn update_physics(&mut self) {
+        for index in 0..self.particles_flat.len() {
+            let particle = self.particles_flat[index];
+            particle.element.pre_tick(index, particle, self);
+        }
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
 
@@ -255,6 +289,11 @@ impl World {
                     // Normally energy particles would move with velocity but we don't have that implemented.
                 }
             }
+            particle.element.physics_tick(index, particle, self);
+        }
+        for index in 0..self.particles_flat.len() {
+            let particle = self.particles_flat[index];
+            particle.element.post_tick(index, particle, self);
         }
     }
 }

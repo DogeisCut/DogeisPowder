@@ -145,10 +145,10 @@ impl Tool {
                     let current_pos = self.last_mouse_pos.unwrap_or(input.mouse_pos);
 
                     shape_utils::line(
-                        (current_pos.0) as usize,
-                        (current_pos.1) as usize,
-                        (input.mouse_pos.0) as usize,
-                        (input.mouse_pos.1) as usize,
+                        current_pos.0 as usize,
+                        current_pos.1 as usize,
+                        input.mouse_pos.0 as usize,
+                        input.mouse_pos.1 as usize,
                         |start_x, start_y| {
                             shape.for_each_point(false, |offset_x, offset_y| {
                                 world.spawn_particle(
@@ -167,7 +167,23 @@ impl Tool {
                 Kind::Color(color) => todo!(),
                 Kind::Picker() => todo!(),
                 Kind::ColorPicker() => todo!(),
-                Kind::Erase() => todo!(),
+                Kind::Erase() => {
+                    let current_pos = self.last_mouse_pos.unwrap_or(input.mouse_pos);
+
+                    shape_utils::line(
+                        current_pos.0 as usize,
+                        current_pos.1 as usize,
+                        input.mouse_pos.0 as usize,
+                        input.mouse_pos.1 as usize,
+                        |start_x, start_y| {
+                            shape.for_each_point(false, |offset_x, offset_y| {
+                                let tx = (start_x as f32 + offset_x + 0.5) as isize;
+                                let ty = (start_y as f32 + offset_y + 0.5) as isize;
+                                world.remove_particle_at(tx, ty);
+                            });
+                        },
+                    );
+                },
             }
         }
         self.last_mouse_pos = Some(input.mouse_pos)

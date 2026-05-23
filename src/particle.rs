@@ -42,9 +42,9 @@ impl Particle {
             vy,
             element,
             decoration,
-            temperature_kelvin: element.default_temperature_kelvin(),
+            temperature_kelvin: element.temperature_kelvin(),
             sub_type: None,
-            life: element.default_life(),
+            life: element.life(),
         }
     }
     pub fn get_grid_x(&self) -> usize {

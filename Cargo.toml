@@ -1,10 +1,10 @@
-[target.x86_64-pc-windows-msvc]
-rustflags = ["-C", "target-feature=+crt-static"]
-
 [package]
 name = "dogeis_powder"
 version = "0.1.0"
 edition = "2024"
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
 
 [dependencies]
 rand = "0.9"
