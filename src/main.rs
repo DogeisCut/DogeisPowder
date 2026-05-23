@@ -6,14 +6,20 @@ use crate::{
 };
 use minifb::{Key, Window, WindowOptions};
 
+// Please keep this hierarchy clean.
 mod color;
-mod element;
-mod game;
-mod input;
-mod particle;
 mod raster;
+
+mod element;
+mod input;
+
+mod particle;
+mod shape;
+
 mod tool;
 mod world;
+
+mod game;
 
 const WIDTH: usize = 320;
 const HEIGHT: usize = 180;

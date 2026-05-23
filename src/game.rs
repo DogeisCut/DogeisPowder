@@ -3,7 +3,8 @@ use std::usize;
 use crate::{
     element::Element,
     input::{Action, InputState},
-    tool::{self, Shape, Tool},
+    shape::Shape,
+    tool::{self, Tool},
     world::{self, World},
 };
 
