@@ -25,6 +25,7 @@ pub enum Element {
     Water,
     Wood,
     Ice,
+    WaterVapor,
 }
 
 impl Element {
@@ -34,6 +35,8 @@ impl Element {
             Element::Water => "Water",
             Element::Wood => "Wood",
             Element::Ice => "Ice",
+            Element::WaterVapor => "Water Vapor",
+            _ => "Unnamed Element"
         }
     }
     pub fn density(&self) -> f32 {
@@ -43,6 +46,8 @@ impl Element {
             Element::Water => 1.0,
             Element::Wood => 0.75,
             Element::Ice => 0.934,
+            Element::WaterVapor => 0.000804,
+            _ => 1.0
         }
     }
     pub fn kind(&self) -> StateOfMatter {
@@ -51,14 +56,18 @@ impl Element {
             Element::Water => StateOfMatter::Liquid,
             Element::Wood => StateOfMatter::Solid,
             Element::Ice => StateOfMatter::Solid,
+            Element::WaterVapor => StateOfMatter::Gas,
+            _ => StateOfMatter::Powder
         }
     }
-    pub fn color(&self) -> Color {
+    pub fn color(&self) -> Color { // would be cool to pass in more stuff here later so elements like fire can change color with life
         match self {
             Element::Sand => Color::new(255, 229, 125, None),
             Element::Water => Color::new(36, 116, 255, None),
             Element::Wood => Color::new(89, 75, 51, None),
             Element::Ice => Color::new(128, 185, 255, None),
+            Element::WaterVapor => Color::new(128, 185, 255, None),
+            _ => Color { value: 0xFFFF0000 }
         }
     }
     pub fn brightness_vary(&self) -> u8 {
@@ -72,6 +81,16 @@ impl Element {
         match self {
             Element::Ice => 273.15,
             _ => 298.15,
+        }
+    }
+    pub fn thermal_conductivity(&self) -> f32 {
+        match self { // idk what unit this should be in
+            _ => 1.0,
+        }
+    }
+    pub fn heat_capacity(&self) -> f32 {
+        match self { // idk what unit this should be in
+            _ => 1.0,
         }
     }
     pub fn low_temperature_reaction(&self) -> ValueReaction<f32> {
@@ -94,24 +113,24 @@ impl Element {
         }
     }
     pub fn ionization_temperature(&self) -> Option<f32> {
-        // this is only an option because plasma itself wont be ionizing
         match self {
             Element::Sand => Some(22_500.0),
             Element::Water => Some(12_000.0),
             Element::Wood => Some(10_000.0),
             Element::Ice => Some(12_000.0),
+            Element::WaterVapor => Some(12_000.0),
             _ => Some(15000.0),
         }
     }
-    pub fn life(&self) -> Option<f32> {
+    pub fn life(&self) -> Option<i32> {
         match self {
             _ => None,
         }
     }
-    pub fn flamability(&self) -> usize {
-        match self {
-            Element::Wood => 2,
-            _ => 0,
+    pub fn flammability(&self) -> f32 {
+        match self { // chance of a fire particle eating it.
+            Element::Wood => 0.8,
+            _ => 0.0,
         }
     }
 

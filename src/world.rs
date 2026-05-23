@@ -269,7 +269,15 @@ impl World {
                     }
                     updated[index] = true;
 
-                    let particle = self.particles_flat[index];
+                    let mut particle = self.particles_flat[index];
+
+                    if let Some(life) = particle.life.as_mut() { // Currently broken, life just doesn't do anything. Not sure if its because this is bugged or if setting the life value is bugged.
+                        *life = life.saturating_sub(1);
+                        if *life == 0 {
+                            self.kill_particle(index);
+                        }
+                    }
+                    
                     if particle.is_dead {
                         continue;
                     }

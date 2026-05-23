@@ -10,7 +10,7 @@ pub struct Particle {
     pub decoration: Color,
     pub temperature_kelvin: f32,
     pub sub_type: Option<Element>,
-    pub life: Option<f32>,
+    pub life: Option<i32>,
     pub is_dead: bool,
 }
 impl Particle {
