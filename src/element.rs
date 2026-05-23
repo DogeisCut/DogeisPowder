@@ -111,7 +111,6 @@ impl Element {
         }
     }
 
-    // TODO: tombstone approach for deleting particles. we dont want index panics for element behaviors :/
     pub fn pre_tick(&self, index: usize, particle: Particle, world: &mut World) {
         match self {
             _ => {},

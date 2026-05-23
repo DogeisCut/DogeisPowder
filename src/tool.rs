@@ -179,7 +179,7 @@ impl Tool {
                             shape.for_each_point(false, |offset_x, offset_y| {
                                 let tx = (start_x as f32 + offset_x + 0.5) as isize;
                                 let ty = (start_y as f32 + offset_y + 0.5) as isize;
-                                world.remove_particle_at(tx, ty);
+                                world.kill_particle_at(tx, ty);
                             });
                         },
                     );

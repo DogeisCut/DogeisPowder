@@ -89,6 +89,10 @@ impl World {
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
 
+            if particle.is_dead { 
+                continue; 
+            }
+
             let grid_x = particle.get_grid_x();
             let grid_y = particle.get_grid_y();
 
@@ -174,24 +178,21 @@ impl World {
         self.try_move_particle(index, particle.x + by_x, particle.y + by_y)
     }
 
-    pub fn remove_particle_by_index(&mut self, index: usize) {
-        let particle = self.particles_flat[index];
-        self.particles_grid.set(particle.get_grid_x(), particle.get_grid_y(), None);
-
-        let last_index = self.particles_flat.len() - 1;
-
-        if index != last_index {
-            self.particles_flat.swap_remove(index);
-            let moved = self.particles_flat[index];
-            self.particles_grid.set(moved.get_grid_x(), moved.get_grid_y(), Some(index))
-        } else {
-            self.particles_flat.pop();
+    pub fn kill_particle(&mut self, index: usize) {
+        if self.particles_flat[index].is_dead {
+            return;
         }
+
+        self.particles_flat[index].is_dead = true;
+
+        let grid_x = self.particles_flat[index].get_grid_x();
+        let grid_y = self.particles_flat[index].get_grid_y();
+        self.particles_grid.set(grid_x, grid_y, None);
     }
 
-    pub fn remove_particle_at(&mut self, grid_x: isize, grid_y: isize) {
+    pub fn kill_particle_at(&mut self, grid_x: isize, grid_y: isize) {
         if let CellState::Occupied(index) = self.particles_grid.get(grid_x, grid_y) {
-            self.remove_particle_by_index(index);
+            self.kill_particle(index);
         }
     }
 
@@ -215,7 +216,7 @@ impl World {
                 );
             }
             ParticleSpawnMode::Override => {
-                self.remove_particle_at(target_grid_x, target_grid_y);
+                self.kill_particle_at(target_grid_x, target_grid_y);
                 self.particles_flat
                     .push(Particle::new(element, x, y, 0.0, 0.0));
                 self.particles_grid.set(
@@ -241,10 +242,12 @@ impl World {
     pub fn update_physics(&mut self) {
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
+            if particle.is_dead { continue; }
             particle.element.pre_tick(index, particle, self);
         }
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
+            if particle.is_dead { continue; }
 
             match particle.element.kind() {
                 StateOfMatter::Powder => {
@@ -289,11 +292,35 @@ impl World {
                     // Normally energy particles would move with velocity but we don't have that implemented.
                 }
             }
+
             particle.element.physics_tick(index, particle, self);
         }
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
+            if particle.is_dead { continue; }
             particle.element.post_tick(index, particle, self);
+        }
+
+        self.cleanup_dead_particles();
+    }
+
+    pub fn cleanup_dead_particles(&mut self) {
+        let mut i = self.particles_flat.len();
+        while i > 0 {
+            i -= 1;
+
+            if self.particles_flat[i].is_dead {
+                self.particles_flat.swap_remove(i);
+
+                if i < self.particles_flat.len() {
+                    let moved_particle = self.particles_flat[i];
+                    self.particles_grid.set(
+                        moved_particle.get_grid_x(),
+                        moved_particle.get_grid_y(),
+                        Some(i)
+                    )
+                }
+            }
         }
     }
 }

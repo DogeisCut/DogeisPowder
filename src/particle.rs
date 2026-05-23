@@ -11,6 +11,7 @@ pub struct Particle {
     pub temperature_kelvin: f32,
     pub sub_type: Option<Element>,
     pub life: Option<f32>,
+    pub is_dead: bool,
 }
 impl Particle {
     pub fn new(element: Element, x: f32, y: f32, vx: f32, vy: f32) -> Self {
@@ -45,6 +46,7 @@ impl Particle {
             temperature_kelvin: element.temperature_kelvin(),
             sub_type: None,
             life: element.life(),
+            is_dead: false
         }
     }
     pub fn get_grid_x(&self) -> usize {
