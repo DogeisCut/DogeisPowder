@@ -11,7 +11,7 @@ mod element;
 mod game;
 mod input;
 mod particle;
-mod shape_utils;
+mod raster;
 mod tool;
 mod world;
 

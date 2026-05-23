@@ -4,7 +4,7 @@ use crate::{
     color::Color,
     element::Element,
     input::{Action, InputState},
-    shape_utils,
+    raster,
     world::{ParticleSpawnMode, World},
 };
 
@@ -68,7 +68,7 @@ impl Shape {
                 let rx = *width / 2;
                 let ry = *height / 2;
 
-                shape_utils::rect(*width, *height, border_only, |x, y| {
+                raster::rect(*width, *height, border_only, |x, y| {
                     f(x as f32 - rx as f32, y as f32 - ry as f32);
                 });
             }
@@ -76,7 +76,7 @@ impl Shape {
                 let rx = *width / 2;
                 let ry = *height / 2;
 
-                shape_utils::oval(rx, ry, rx, ry, border_only, |x, y| {
+                raster::oval(rx, ry, rx, ry, border_only, |x, y| {
                     f(x as f32 - rx as f32, y as f32 - ry as f32);
                 });
             }
@@ -88,7 +88,7 @@ impl Shape {
                 let p1 = (0, *height - 1);
                 let p2 = (*width - 1, *height - 1);
 
-                shape_utils::triangle(p0, p1, p2, border_only, |x, y| {
+                raster::triangle(p0, p1, p2, border_only, |x, y| {
                     f(x as f32 - rx as f32, y as f32 - ry as f32);
                 });
             }
@@ -154,7 +154,7 @@ impl Tool {
                 Kind::Smear(element, spawn_mode) => {
                     let current_pos = self.last_mouse_pos.unwrap_or(input.mouse_pos);
 
-                    shape_utils::line(
+                    raster::line(
                         current_pos.0 as usize,
                         current_pos.1 as usize,
                         input.mouse_pos.0 as usize,
@@ -180,7 +180,7 @@ impl Tool {
                 Kind::Erase() => {
                     let current_pos = self.last_mouse_pos.unwrap_or(input.mouse_pos);
 
-                    shape_utils::line(
+                    raster::line(
                         current_pos.0 as usize,
                         current_pos.1 as usize,
                         input.mouse_pos.0 as usize,
