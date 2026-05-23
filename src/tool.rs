@@ -40,10 +40,10 @@ impl Tool {
                     let current_pos = self.last_mouse_pos.unwrap_or(input.mouse_pos);
 
                     raster::line(
-                        f32_to_grid(current_pos.0),
-                        f32_to_grid(current_pos.1),
-                        f32_to_grid(input.mouse_pos.0),
-                        f32_to_grid(input.mouse_pos.1),
+                        f32_to_grid(current_pos.0) as usize,
+                        f32_to_grid(current_pos.1) as usize,
+                        f32_to_grid(input.mouse_pos.0) as usize,
+                        f32_to_grid(input.mouse_pos.1) as usize,
                         |start_x, start_y| {
                             shape.for_each_point(false, |offset_x, offset_y| {
                                 world.spawn_particle(
@@ -66,10 +66,10 @@ impl Tool {
                     let current_pos = self.last_mouse_pos.unwrap_or(input.mouse_pos);
 
                     raster::line(
-                        f32_to_grid(current_pos.0),
-                        f32_to_grid(current_pos.1),
-                        f32_to_grid(input.mouse_pos.0),
-                        f32_to_grid(input.mouse_pos.1),
+                        f32_to_grid(current_pos.0) as usize,
+                        f32_to_grid(current_pos.1) as usize,
+                        f32_to_grid(input.mouse_pos.0) as usize,
+                        f32_to_grid(input.mouse_pos.1) as usize,
                         |start_x, start_y| {
                             shape.for_each_point(false, |offset_x, offset_y| {
                                 let tx = f32_to_grid(start_x as f32 + offset_x);

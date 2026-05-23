@@ -101,8 +101,8 @@ impl World {
     }
 
     pub fn try_move_particle(&mut self, index: usize, target_x: f32, target_y: f32) -> bool {
-        let target_grid_x = f32_to_grid(target_x);
-        let target_grid_y = f32_to_grid(target_y);
+        let target_grid_x = f32_to_grid(target_x) as usize;
+        let target_grid_y = f32_to_grid(target_y) as usize;
 
         match self.particles_grid.get(target_grid_x as isize, target_grid_y as isize) {
             CellState::Empty => {
@@ -209,8 +209,8 @@ impl World {
         y: f32,
         particle_spawn_mode: ParticleSpawnMode,
     ) {
-        let target_grid_x = f32_to_grid(x);
-        let target_grid_y = f32_to_grid(y);
+        let target_grid_x = f32_to_grid(x) as usize;
+        let target_grid_y = f32_to_grid(y) as usize;
         match particle_spawn_mode {
             ParticleSpawnMode::Overlap => {
                 self.particles_flat
@@ -253,58 +253,69 @@ impl World {
             }
             particle.element.pre_tick(index, particle, self);
         }
-        for index in 0..self.particles_flat.len() {
-            let particle = self.particles_flat[index];
-            if particle.is_dead {
-                continue;
-            }
 
-            match particle.element.kind() {
-                StateOfMatter::Powder => {
-                    let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
+        let mut updated = vec![false; self.particles_flat.len()];
 
-                    if !self.try_move_particle_by(index, 0.0, 1.0) {
-                        if !self.try_move_particle_by(index, bias, 1.0) {
-                            self.try_move_particle_by(index, -bias, 1.0);
-                        };
-                    };
-                }
-                StateOfMatter::Liquid => {
-                    let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
+        for y in (0..self.particles_grid.height).rev() {
+            
+            let flip_x = rand::random::<bool>();
+            
+            for i in 0..self.particles_grid.width {
+                let x = if flip_x { self.particles_grid.width - 1 - i } else { i };
 
-                    if !self.try_move_particle_by(index, 0.0, 1.0) {
-                        if !self.try_move_particle_by(index, bias, 1.0) {
-                            if !self.try_move_particle_by(index, -bias, 1.0) {
-                                if !self.try_move_particle_by(index, bias, 0.0) {
-                                    self.try_move_particle_by(index, -bias, 0.0);
+                if let CellState::Occupied(index) = self.particles_grid.get(x as isize, y as isize) {
+                    if updated[index] {
+                        continue;
+                    }
+                    updated[index] = true;
+
+                    let particle = self.particles_flat[index];
+                    if particle.is_dead {
+                        continue;
+                    }
+
+                    match particle.element.kind() {
+                        StateOfMatter::Powder => {
+                            let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
+                            if !self.try_move_particle_by(index, 0.0, 1.0) {
+                                if !self.try_move_particle_by(index, bias, 1.0) {
+                                    self.try_move_particle_by(index, -bias, 1.0);
                                 };
                             };
-                        };
-                    };
-                }
-                StateOfMatter::Gas => {
-                    let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
-
-                    if !self.try_move_particle_by(index, bias, -1.0) {
-                        if !self.try_move_particle_by(index, 0.0, -1.0) {
-                            if !self.try_move_particle_by(index, -bias, -1.0) {
-                                if !self.try_move_particle_by(index, bias, 0.0) {
-                                    self.try_move_particle_by(index, -bias, 0.0);
+                        }
+                        StateOfMatter::Liquid => {
+                            let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
+                            if !self.try_move_particle_by(index, 0.0, 1.0) {
+                                if !self.try_move_particle_by(index, bias, 1.0) {
+                                    if !self.try_move_particle_by(index, -bias, 1.0) {
+                                        if !self.try_move_particle_by(index, bias, 0.0) {
+                                            self.try_move_particle_by(index, -bias, 0.0);
+                                        };
+                                    };
                                 };
                             };
-                        };
-                    };
-                }
-                StateOfMatter::Solid => {
-                    // Solids sit still, they don't even move with velocity.
-                }
-                StateOfMatter::Energy => {
-                    // Normally energy particles would move with velocity but we don't have that implemented.
+                        }
+                        StateOfMatter::Gas => {
+                            let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
+                            if !self.try_move_particle_by(index, bias, -1.0) {
+                                if !self.try_move_particle_by(index, 0.0, -1.0) {
+                                    if !self.try_move_particle_by(index, -bias, -1.0) {
+                                        if !self.try_move_particle_by(index, bias, 0.0) {
+                                            self.try_move_particle_by(index, -bias, 0.0);
+                                        };
+                                    };
+                                };
+                            };
+                        }
+                        StateOfMatter::Solid | StateOfMatter::Energy => {}
+                    }
+
+                    let particle_after = self.particles_flat[index];
+                    particle_after.element.physics_tick(index, particle_after, self);
                 }
             }
-
-            particle.element.physics_tick(index, particle, self);
         }
+
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
             if particle.is_dead {
@@ -337,6 +348,6 @@ impl World {
     }
 }
 
-pub fn f32_to_grid(float: f32) -> usize {
-    (float).floor() as usize
+pub fn f32_to_grid(float: f32) -> isize {
+    float.floor() as isize
 }

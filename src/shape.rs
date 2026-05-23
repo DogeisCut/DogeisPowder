@@ -92,7 +92,11 @@ impl Shape {
             let render_x = f32_to_grid(mouse_pos.0 + offset_x);
             let render_y = f32_to_grid(mouse_pos.1 + offset_y);
 
-            if render_x < screen_width && render_y < screen_height {
+            if render_x >= 0
+                && render_x < screen_width as isize
+                && render_y >= 0
+                && render_y < screen_height as isize
+            {
                 let idx = render_x as usize + (render_y as usize * screen_width);
                 screen_buffer[idx] = Color {
                     value: screen_buffer[idx],

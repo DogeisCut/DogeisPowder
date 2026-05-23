@@ -1,3 +1,5 @@
+// TODO: handle or scrap rotation
+
 pub fn rect<F>(width: usize, height: usize, border_only: bool, mut f: F)
 where
     F: FnMut(usize, usize),
@@ -111,6 +113,7 @@ pub fn triangle<F>(
     F: FnMut(usize, usize),
 {
     if border_only {
+        // this looks bad, for some reason the end pixels don't get filled in
         line(p0.0, p0.1, p1.0, p1.1, &mut f);
         line(p1.0, p1.1, p2.0, p2.1, &mut f);
         line(p2.0, p2.1, p0.0, p0.1, &mut f);

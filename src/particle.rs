@@ -50,9 +50,9 @@ impl Particle {
         }
     }
     pub fn get_grid_x(&self) -> usize {
-        f32_to_grid(self.x)
+        f32_to_grid(self.x) as usize
     }
     pub fn get_grid_y(&self) -> usize {
-        f32_to_grid(self.y)
+        f32_to_grid(self.y) as usize
     }
 }
