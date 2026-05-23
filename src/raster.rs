@@ -112,30 +112,39 @@ pub fn triangle<F>(
 ) where
     F: FnMut(usize, usize),
 {
-    if border_only {
-        // this looks bad, for some reason the end pixels don't get filled in
-        line(p0.0, p0.1, p1.0, p1.1, &mut f);
-        line(p1.0, p1.1, p2.0, p2.1, &mut f);
-        line(p2.0, p2.1, p0.0, p0.1, &mut f);
-    } else {
-        let min_x = p0.0.min(p1.0).min(p2.0);
-        let max_x = p0.0.max(p1.0).max(p2.0);
-        let min_y = p0.1.min(p1.1).min(p2.1);
-        let max_y = p0.1.max(p1.1).max(p2.1);
+    let min_x = p0.0.min(p1.0).min(p2.0);
+    let max_x = p0.0.max(p1.0).max(p2.0);
+    let min_y = p0.1.min(p1.1).min(p2.1);
+    let max_y = p0.1.max(p1.1).max(p2.1);
 
-        let edge = |a: (usize, usize), b: (usize, usize), c: (usize, usize)| -> isize {
-            (c.0 as isize - a.0 as isize) * (b.1 as isize - a.1 as isize)
-                - (c.1 as isize - a.1 as isize) * (b.0 as isize - a.0 as isize)
-        };
+    let edge = |a: (usize, usize), b: (usize, usize), cx: isize, cy: isize| -> isize {
+        (cx - a.0 as isize) * (b.1 as isize - a.1 as isize)
+            - (cy - a.1 as isize) * (b.0 as isize - a.0 as isize)
+    };
 
-        for y in min_y..=max_y {
-            for x in min_x..=max_x {
-                let p = (x, y);
-                let w0 = edge(p1, p2, p);
-                let w1 = edge(p2, p0, p);
-                let w2 = edge(p0, p1, p);
+    let is_inside = |x: isize, y: isize| -> bool {
+        let w0 = edge(p1, p2, x, y);
+        let w1 = edge(p2, p0, x, y);
+        let w2 = edge(p0, p1, x, y);
+        (w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0)
+    };
 
-                if (w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0) {
+    for y in min_y..=max_y {
+        for x in min_x..=max_x {
+            let x_i = x as isize;
+            let y_i = y as isize;
+
+            if is_inside(x_i, y_i) {
+                if border_only {
+                    let is_border = !is_inside(x_i + 1, y_i)
+                        || !is_inside(x_i - 1, y_i)
+                        || !is_inside(x_i, y_i + 1)
+                        || !is_inside(x_i, y_i - 1);
+
+                    if is_border {
+                        f(x, y);
+                    }
+                } else {
                     f(x, y);
                 }
             }
