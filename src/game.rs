@@ -1,13 +1,8 @@
 use std::usize;
 
-use minifb::Key::F;
-
 use crate::{
-    color::Color,
     element::Element,
-    input::{Action, InputState},
-    particle::Particle,
-    shape_utils::{oval, rect},
+    input::InputState,
     tool::{self, Tool},
     world::{self, World},
 };

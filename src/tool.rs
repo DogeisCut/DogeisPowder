@@ -114,7 +114,7 @@ impl Tool {
                     let current_pos = self.last_mouse_pos.unwrap_or(input.mouse_pos);
 
                     shape_utils::line(
-                        (current_pos.0 ) as usize,
+                        (current_pos.0) as usize,
                         (current_pos.1) as usize,
                         (input.mouse_pos.0) as usize,
                         (input.mouse_pos.1) as usize,
