@@ -89,8 +89,8 @@ impl Shape {
         mouse_pos: (f32, f32),
     ) {
         self.for_each_point(true, |offset_x, offset_y| {
-            let render_x = (mouse_pos.0 + 0.5 + offset_x) as isize;
-            let render_y = (mouse_pos.1 + 0.5 + offset_y) as isize;
+            let render_x = (mouse_pos.0 + offset_x) as isize;
+            let render_y = (mouse_pos.1 + offset_y) as isize;
 
             if render_x >= 0
                 && render_x < screen_width as isize
