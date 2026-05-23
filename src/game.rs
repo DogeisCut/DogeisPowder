@@ -32,6 +32,17 @@ impl Game {
     pub fn tick(&mut self, input: &InputState) {
         self.world.populate_grid();
         self.world.update_physics();
+
+        if input.is_action_pressed(Action::EnlargeToolShape) {
+            self.tool_shape.scale_by(1);
+        }
+        if input.is_action_pressed(Action::ShrinkToolShape) {
+            self.tool_shape.scale_by(-1);
+        }
+        if input.is_action_just_pressed(Action::SwitchToolShape) {
+            self.tool_shape.cycle_forward();
+        }
+
         self.tools
             .0
             .update(&mut self.tool_shape, &mut self.world, input);

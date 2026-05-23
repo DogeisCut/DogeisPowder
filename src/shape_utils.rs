@@ -61,73 +61,39 @@ where
         return;
     }
 
-    if border_only {
-        // TODO: fix weird holes at the cardinals of the oval...
-        // this border only formula seems fundimentally flawed honestly, it doesnt match with the filled oval
+    let w = (2 * rx + 1) as isize;
+    let h = (2 * ry + 1) as isize;
+    let w2 = w * w;
+    let h2 = h * h;
+    let limit = w2 * h2;
 
-        let rx_i = rx as isize;
-        let ry_i = ry as isize;
+    let start_y = cy.saturating_sub(ry);
+    let start_x = cx.saturating_sub(rx);
+    let end_y = cy + ry;
+    let end_x = cx + rx;
 
-        let mut x = 0;
-        let mut y = ry_i;
+    let is_inside = |x: isize, y: isize| -> bool {
+        let dx = x - cx as isize;
+        let dy = y - cy as isize;
+        4 * dx * dx * h2 + 4 * dy * dy * w2 <= limit
+    };
 
-        let rx2 = rx_i * rx_i;
-        let ry2 = ry_i * ry_i;
+    for y in start_y..=end_y {
+        for x in start_x..=end_x {
+            let x_i = x as isize;
+            let y_i = y as isize;
 
-        let mut p = ry2 - rx2 * ry_i + rx2 / 4;
+            if is_inside(x_i, y_i) {
+                if border_only {
+                    let is_border = !is_inside(x_i + 1, y_i)
+                        || !is_inside(x_i - 1, y_i)
+                        || !is_inside(x_i, y_i + 1)
+                        || !is_inside(x_i, y_i - 1);
 
-        let mut plot_four = |x: isize, y: isize| {
-            if let (Some(x1), Some(y1)) = (cx.checked_add_signed(x), cy.checked_add_signed(y)) {
-                f(x1, y1);
-            }
-            if let (Some(x2), Some(y1)) = (cx.checked_add_signed(-x), cy.checked_add_signed(y)) {
-                f(x2, y1);
-            }
-            if let (Some(x1), Some(y2)) = (cx.checked_add_signed(x), cy.checked_add_signed(-y)) {
-                f(x1, y2);
-            }
-            if let (Some(x2), Some(y2)) = (cx.checked_add_signed(-x), cy.checked_add_signed(-y)) {
-                f(x2, y2);
-            }
-        };
-
-        while 2 * ry2 * x <= 2 * rx2 * y {
-            plot_four(x, y);
-            x += 1;
-            if p < 0 {
-                p += 2 * ry2 * x + ry2;
-            } else {
-                y -= 1;
-                p += 2 * ry2 * x - 2 * rx2 * y + ry2;
-            }
-        }
-
-        p = (ry2 as f64 * (x as f64 + 0.5).powi(2) + rx2 as f64 * (y - 1) as f64 * (y - 1) as f64
-            - (rx2 * ry2) as f64) as isize;
-        while y >= 0 {
-            plot_four(x, y);
-            y -= 1;
-            if p > 0 {
-                p += rx2 - 2 * rx2 * y;
-            } else {
-                x += 1;
-                p += 2 * ry2 * x - 2 * rx2 * y + rx2;
-            }
-        }
-    } else {
-        let rx_i = rx as isize;
-        let ry_i = ry as isize;
-        let rx2 = rx_i * rx_i;
-        let ry2 = ry_i * ry_i;
-
-        let start_y = cy.saturating_sub(ry);
-        let start_x = cx.saturating_sub(rx);
-
-        for y in start_y..=(cy + ry) {
-            let dy = y as isize - cy as isize;
-            for x in start_x..=(cx + rx) {
-                let dx = x as isize - cx as isize;
-                if dx * dx * ry2 + dy * dy * rx2 <= rx2 * ry2 {
+                    if is_border {
+                        f(x, y);
+                    }
+                } else {
                     f(x, y);
                 }
             }
@@ -154,7 +120,6 @@ pub fn triangle<F>(
         let min_y = p0.1.min(p1.1).min(p2.1);
         let max_y = p0.1.max(p1.1).max(p2.1);
 
-        // Signed math helper to calculate edge weights
         let edge = |a: (usize, usize), b: (usize, usize), c: (usize, usize)| -> isize {
             (c.0 as isize - a.0 as isize) * (b.1 as isize - a.1 as isize)
                 - (c.1 as isize - a.1 as isize) * (b.0 as isize - a.0 as isize)

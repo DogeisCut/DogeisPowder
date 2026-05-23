@@ -89,8 +89,8 @@ impl World {
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
 
-            if particle.is_dead { 
-                continue; 
+            if particle.is_dead {
+                continue;
             }
 
             let grid_x = particle.get_grid_x();
@@ -122,8 +122,10 @@ impl World {
                     target_grid_y as usize,
                     Some(index),
                 );
-                
-                particle.element.on_physics_move_attempt(index, particle, self, target_x, target_y);
+
+                particle
+                    .element
+                    .on_physics_move_attempt(index, particle, self, target_x, target_y);
 
                 true
             }
@@ -157,19 +159,23 @@ impl World {
                 );
                 self.particles_grid
                     .set(old_grid_x, old_grid_y, Some(other_index));
-                
-                particle.element.on_physics_move_attempt(index, particle, self, target_x, target_y);
+
+                particle
+                    .element
+                    .on_physics_move_attempt(index, particle, self, target_x, target_y);
 
                 true
             }
             CellState::OutOfBounds => {
                 // TODO: handle different edge types
-                
+
                 let particle = self.particles_flat[index];
-                particle.element.on_physics_move_attempt(index, particle, self, target_x, target_y);
+                particle
+                    .element
+                    .on_physics_move_attempt(index, particle, self, target_x, target_y);
 
                 false
-            },
+            }
         }
     }
 
@@ -242,12 +248,16 @@ impl World {
     pub fn update_physics(&mut self) {
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
-            if particle.is_dead { continue; }
+            if particle.is_dead {
+                continue;
+            }
             particle.element.pre_tick(index, particle, self);
         }
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
-            if particle.is_dead { continue; }
+            if particle.is_dead {
+                continue;
+            }
 
             match particle.element.kind() {
                 StateOfMatter::Powder => {
@@ -297,7 +307,9 @@ impl World {
         }
         for index in 0..self.particles_flat.len() {
             let particle = self.particles_flat[index];
-            if particle.is_dead { continue; }
+            if particle.is_dead {
+                continue;
+            }
             particle.element.post_tick(index, particle, self);
         }
 
@@ -317,7 +329,7 @@ impl World {
                     self.particles_grid.set(
                         moved_particle.get_grid_x(),
                         moved_particle.get_grid_y(),
-                        Some(i)
+                        Some(i),
                     )
                 }
             }

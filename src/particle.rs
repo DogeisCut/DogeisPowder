@@ -46,7 +46,7 @@ impl Particle {
             temperature_kelvin: element.temperature_kelvin(),
             sub_type: None,
             life: element.life(),
-            is_dead: false
+            is_dead: false,
         }
     }
     pub fn get_grid_x(&self) -> usize {

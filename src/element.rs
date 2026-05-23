@@ -1,6 +1,10 @@
 use rand::seq::index;
 
-use crate::{color::Color, particle::Particle, world::{self, World}};
+use crate::{
+    color::Color,
+    particle::Particle,
+    world::{self, World},
+};
 
 pub enum StateOfMatter {
     Powder,
@@ -67,14 +71,14 @@ impl Element {
     pub fn temperature_kelvin(&self) -> f32 {
         match self {
             Element::Ice => 273.15,
-            _ => 298.15
+            _ => 298.15,
         }
     }
     pub fn low_temperature_reaction(&self) -> ValueReaction<f32> {
         match self {
             Element::Water => {
                 ValueReaction::Transition(273.15, Some(Element::Ice), Some(Element::Water))
-            },
+            }
             _ => ValueReaction::None,
         }
     }
@@ -85,7 +89,7 @@ impl Element {
             Element::Wood => ValueReaction::None, //TODO: ValueReaction::Transition(612.0, Some(Element::Charcoal), None) // Further heated charcoal turns to ash at 723.0
             Element::Ice => {
                 ValueReaction::Transition(273.15, Some(Element::Water), Some(Element::Ice))
-            },
+            }
             _ => ValueReaction::None,
         }
     }
@@ -96,7 +100,7 @@ impl Element {
             Element::Water => Some(12_000.0),
             Element::Wood => Some(10_000.0),
             Element::Ice => Some(12_000.0),
-            _=> Some(15000.0),
+            _ => Some(15000.0),
         }
     }
     pub fn life(&self) -> Option<f32> {
@@ -113,22 +117,29 @@ impl Element {
 
     pub fn pre_tick(&self, index: usize, particle: Particle, world: &mut World) {
         match self {
-            _ => {},
+            _ => {}
         }
     }
     pub fn physics_tick(&self, index: usize, particle: Particle, world: &mut World) {
         match self {
-            _ => {},
+            _ => {}
         }
     }
     pub fn post_tick(&self, index: usize, particle: Particle, world: &mut World) {
         match self {
-            _ => {},
+            _ => {}
         }
     }
-    pub fn on_physics_move_attempt(&self, index: usize, particle: Particle, world: &mut World, new_x: f32, new_y: f32) {
+    pub fn on_physics_move_attempt(
+        &self,
+        index: usize,
+        particle: Particle,
+        world: &mut World,
+        new_x: f32,
+        new_y: f32,
+    ) {
         match self {
-            _ => {},
+            _ => {}
         }
     }
 }

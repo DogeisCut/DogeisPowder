@@ -80,6 +80,7 @@ pub struct InputState {
     pub mouse_pos: (f32, f32),
     pub scroll_wheel: (f32, f32),
     active_actions: HashSet<Action>,
+    previous_actions: HashSet<Action>,
 }
 impl InputState {
     pub fn is_action_pressed(&self, action: Action) -> bool {
@@ -87,16 +88,16 @@ impl InputState {
     }
 
     pub fn is_action_just_pressed(&self, action: Action) -> bool {
-        // TODO: implement
-        self.active_actions.contains(&action)
+        self.active_actions.contains(&action) && !self.previous_actions.contains(&action)
     }
 
     pub fn is_action_just_released(&self, action: Action) -> bool {
-        // TODO: implement
-        self.active_actions.contains(&action)
+        !self.active_actions.contains(&action) && self.previous_actions.contains(&action)
     }
 
     pub fn update(&mut self, window: &Window, input_map: &InputMap) {
+        self.previous_actions = self.active_actions.clone();
+
         // Update mouse position
         if let Some((mx, my)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
             self.mouse_pos = (mx, my);

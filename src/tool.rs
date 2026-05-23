@@ -11,6 +11,7 @@ use crate::{
 const TOOL_SIZE_MIN: usize = 1;
 const TOOL_SIZE_MAX: usize = 500;
 
+#[derive(Clone, Copy)]
 pub enum Shape {
     Oval(usize, usize, f32),
     Rect(usize, usize, f32),
@@ -27,16 +28,23 @@ impl Shape {
     pub fn scale_by(&mut self, amount: isize) {
         match self {
             Self::Oval(w, h, _) | Self::Rect(w, h, _) | Self::Tri(w, h, _) => {
-                let new_w = (*w as isize) + amount;
-                let new_h = (*h as isize) + amount;
-                *w = new_w.clamp(TOOL_SIZE_MIN as isize, TOOL_SIZE_MAX as isize) as usize;
-                *h = new_h.clamp(TOOL_SIZE_MIN as isize, TOOL_SIZE_MAX as isize) as usize;
+                let new_w = (*w as isize) + amount * 2;
+                let new_h = (*h as isize) + amount * 2;
+
+                *w = (new_w
+                    .max(TOOL_SIZE_MIN as isize)
+                    .min(TOOL_SIZE_MAX as isize)
+                    | 1) as usize;
+                *h = (new_h
+                    .max(TOOL_SIZE_MIN as isize)
+                    .min(TOOL_SIZE_MAX as isize)
+                    | 1) as usize;
             }
         }
     }
 
     pub fn cycle_forward(&mut self) {
-        *self = match std::mem::take(self) {
+        *self = match *self {
             Self::Oval(w, h, r) => Self::Rect(w, h, r),
             Self::Rect(w, h, r) => Self::Tri(w, h, r),
             Self::Tri(w, h, r) => Self::Oval(w, h, r),
@@ -44,7 +52,7 @@ impl Shape {
     }
 
     pub fn cycle_backwards(&mut self) {
-        *self = match std::mem::take(self) {
+        *self = match *self {
             Self::Oval(w, h, r) => Self::Tri(w, h, r),
             Self::Tri(w, h, r) => Self::Rect(w, h, r),
             Self::Rect(w, h, r) => Self::Oval(w, h, r),
@@ -57,11 +65,11 @@ impl Shape {
     {
         match self {
             Shape::Rect(width, height, _rotation) => {
-                let offset_x = *width as f32 / 2.0;
-                let offset_y = *height as f32 / 2.0;
+                let rx = *width / 2;
+                let ry = *height / 2;
 
                 shape_utils::rect(*width, *height, border_only, |x, y| {
-                    f(x as f32 - offset_x, y as f32 - offset_y);
+                    f(x as f32 - rx as f32, y as f32 - ry as f32);
                 });
             }
             Shape::Oval(width, height, _rotation) => {
@@ -72,7 +80,18 @@ impl Shape {
                     f(x as f32 - rx as f32, y as f32 - ry as f32);
                 });
             }
-            Shape::Tri(width, height, _rotation) => {} // TODO
+            Shape::Tri(width, height, _rotation) => {
+                let rx = *width / 2;
+                let ry = *height / 2;
+
+                let p0 = (*width / 2, 0);
+                let p1 = (0, *height - 1);
+                let p2 = (*width - 1, *height - 1);
+
+                shape_utils::triangle(p0, p1, p2, border_only, |x, y| {
+                    f(x as f32 - rx as f32, y as f32 - ry as f32);
+                });
+            }
         }
     }
 
@@ -129,15 +148,6 @@ impl Tool {
         }
     }
     pub fn update(&mut self, shape: &mut Shape, world: &mut World, input: &InputState) {
-        if input.is_action_pressed(Action::EnlargeToolShape) {
-            shape.scale_by(1);
-        }
-        if input.is_action_pressed(Action::ShrinkToolShape) {
-            shape.scale_by(-1);
-        }
-        if input.is_action_just_pressed(Action::SwitchToolShape) {
-            shape.cycle_forward();
-        }
         if input.is_action_pressed(self.use_action) {
             match self.kind {
                 Kind::None => {}
@@ -183,7 +193,7 @@ impl Tool {
                             });
                         },
                     );
-                },
+                }
             }
         }
         self.last_mouse_pos = Some(input.mouse_pos)
