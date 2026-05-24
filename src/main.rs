@@ -9,6 +9,7 @@ use minifb::{Key, Window, WindowOptions};
 // Please keep this hierarchy clean.
 mod color;
 mod raster;
+mod vector;
 
 mod element;
 mod input;
