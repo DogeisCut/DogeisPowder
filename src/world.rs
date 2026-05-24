@@ -361,6 +361,15 @@ impl World {
                         }
                     }
 
+                    // In The Powder Toy (TPT), it looks like settling logic for elements take into account the direction of velocity instead of always assuming downwards motion
+                    // It also looks like gravity is built into the first part of the settling step
+                    // Also decimal gravity needs to be accounted for.
+                    // It also seems particles can bounce a bit (restitution property?)
+                    // There is no velocity transfer between particles in TPT. A fast moving particle hitting another particle will just stop.
+                    // TPT properly checks particles ahead at high speeds, and will stop at the point of impact
+                    // Either elements in TPT have friction, or particles stop dead in their tracks when trying to go through another one, regardless of direction.
+                    // Upon further investigation, it appears to be the latter.
+
                     match particle.element.kind() {
                         StateOfMatter::Powder => {
                             let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
@@ -394,7 +403,12 @@ impl World {
                                 };
                             };
                         }
-                        StateOfMatter::Solid | StateOfMatter::Energy => {}
+                        StateOfMatter::Solid => {
+                            // Nada
+                        }
+                        StateOfMatter::Energy => {
+                            self.try_move_particle(index, particle.vx, particle.vy);
+                        }
                     }
 
                     let particle_after = self.particles_flat[index];

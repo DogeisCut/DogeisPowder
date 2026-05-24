@@ -137,6 +137,11 @@ impl Element {
             _ => 0.0,
         }
     }
+    pub fn restitution(&self) -> f32 {
+        match self {
+            _ => 0.0,
+        }
+    }
 
     pub fn pre_tick(&self, index: usize, particle: Particle, world: &mut World) {
         match self {

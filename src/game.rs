@@ -21,7 +21,7 @@ impl Game {
             tool_shape: Shape::Oval(15, 15, 0.0),
             tools: (
                 Tool::new(
-                    tool::Kind::Smear(Element::Water, world::ParticleSpawnMode::EmptyOnly),
+                    tool::Kind::Smear(Element::WaterVapor, world::ParticleSpawnMode::EmptyOnly),
                     Action::UseTool,
                 ),
                 Tool::new(tool::Kind::Erase(), Action::UseSecondaryTool),
