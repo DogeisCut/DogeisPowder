@@ -36,7 +36,7 @@ impl Element {
             Element::Wood => "Wood",
             Element::Ice => "Ice",
             Element::WaterVapor => "Water Vapor",
-            _ => "Unnamed Element"
+            _ => "Unnamed Element",
         }
     }
     pub fn density(&self) -> f32 {
@@ -47,7 +47,7 @@ impl Element {
             Element::Wood => 0.75,
             Element::Ice => 0.934,
             Element::WaterVapor => 0.000804,
-            _ => 1.0
+            _ => 1.0,
         }
     }
     pub fn kind(&self) -> StateOfMatter {
@@ -57,17 +57,18 @@ impl Element {
             Element::Wood => StateOfMatter::Solid,
             Element::Ice => StateOfMatter::Solid,
             Element::WaterVapor => StateOfMatter::Gas,
-            _ => StateOfMatter::Powder
+            _ => StateOfMatter::Powder,
         }
     }
-    pub fn color(&self) -> Color { // would be cool to pass in more stuff here later so elements like fire can change color with life
+    pub fn color(&self) -> Color {
+        // would be cool to pass in more stuff here later so elements like fire can change color with life
         match self {
             Element::Sand => Color::new(255, 229, 125, None),
             Element::Water => Color::new(36, 116, 255, None),
             Element::Wood => Color::new(89, 75, 51, None),
             Element::Ice => Color::new(128, 185, 255, None),
             Element::WaterVapor => Color::new(128, 185, 255, None),
-            _ => Color { value: 0xFFFF0000 }
+            _ => Color { value: 0xFFFF0000 },
         }
     }
     pub fn brightness_vary(&self) -> u8 {
@@ -84,12 +85,14 @@ impl Element {
         }
     }
     pub fn thermal_conductivity(&self) -> f32 {
-        match self { // idk what unit this should be in
+        match self {
+            // idk what unit this should be in
             _ => 1.0,
         }
     }
     pub fn heat_capacity(&self) -> f32 {
-        match self { // idk what unit this should be in
+        match self {
+            // idk what unit this should be in
             _ => 1.0,
         }
     }
@@ -128,7 +131,8 @@ impl Element {
         }
     }
     pub fn flammability(&self) -> f32 {
-        match self { // chance of a fire particle eating it.
+        match self {
+            // chance of a fire particle eating it.
             Element::Wood => 0.8,
             _ => 0.0,
         }

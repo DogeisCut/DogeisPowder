@@ -61,6 +61,7 @@ pub enum Edge {
 }
 
 pub enum Gravity {
+    None,
     Linear(f32, f32),
     Radial(f32, f32, f32),
 }
@@ -104,7 +105,10 @@ impl World {
         let target_grid_x = f32_to_grid(target_x) as usize;
         let target_grid_y = f32_to_grid(target_y) as usize;
 
-        match self.particles_grid.get(target_grid_x as isize, target_grid_y as isize) {
+        match self
+            .particles_grid
+            .get(target_grid_x as isize, target_grid_y as isize)
+        {
             CellState::Empty => {
                 let mut particle = self.particles_flat[index];
 
@@ -117,11 +121,8 @@ impl World {
                 self.particles_flat[index] = particle;
 
                 self.particles_grid.set(old_grid_x, old_grid_y, None);
-                self.particles_grid.set(
-                    target_grid_x,
-                    target_grid_y,
-                    Some(index),
-                );
+                self.particles_grid
+                    .set(target_grid_x, target_grid_y, Some(index));
 
                 particle
                     .element
@@ -152,11 +153,8 @@ impl World {
                 self.particles_flat[index] = particle;
                 self.particles_flat[other_index] = other_particle;
 
-                self.particles_grid.set(
-                    target_grid_x,
-                    target_grid_y,
-                    Some(index),
-                );
+                self.particles_grid
+                    .set(target_grid_x, target_grid_y, Some(index));
                 self.particles_grid
                     .set(old_grid_x, old_grid_y, Some(other_index));
 
@@ -232,7 +230,11 @@ impl World {
                 );
             }
             ParticleSpawnMode::EmptyOnly => {
-                if self.particles_grid.get(target_grid_x as isize, target_grid_y as isize) == CellState::Empty {
+                if self
+                    .particles_grid
+                    .get(target_grid_x as isize, target_grid_y as isize)
+                    == CellState::Empty
+                {
                     self.particles_flat
                         .push(Particle::new(element, x, y, 0.0, 0.0));
                     self.particles_grid.set(
@@ -257,13 +259,17 @@ impl World {
         let mut updated = vec![false; self.particles_flat.len()];
 
         for y in (0..self.particles_grid.height).rev() {
-            
             let flip_x = rand::random::<bool>();
-            
-            for i in 0..self.particles_grid.width {
-                let x = if flip_x { self.particles_grid.width - 1 - i } else { i };
 
-                if let CellState::Occupied(index) = self.particles_grid.get(x as isize, y as isize) {
+            for i in 0..self.particles_grid.width {
+                let x = if flip_x {
+                    self.particles_grid.width - 1 - i
+                } else {
+                    i
+                };
+
+                if let CellState::Occupied(index) = self.particles_grid.get(x as isize, y as isize)
+                {
                     if updated[index] {
                         continue;
                     }
@@ -271,15 +277,31 @@ impl World {
 
                     let mut particle = self.particles_flat[index];
 
-                    if let Some(life) = particle.life.as_mut() { // Currently broken, life just doesn't do anything. Not sure if its because this is bugged or if setting the life value is bugged.
+                    if let Some(life) = particle.life.as_mut() {
+                        // Currently broken, life just doesn't do anything. Not sure if its because this is bugged or if setting the life value is bugged.
                         *life = life.saturating_sub(1);
                         if *life == 0 {
                             self.kill_particle(index);
                         }
                     }
-                    
+
                     if particle.is_dead {
                         continue;
+                    }
+
+                    match &self.gravity {
+                        Gravity::None => {}
+                        Gravity::Linear(gx, gy) => {
+                            //particle.vx += gx;
+                            //particle.vy += gy;
+                        }
+                        Gravity::Radial(cx, cy, strength) => {
+                            // let dx = cx - particle.x;
+                            // let dy = cy - particle.y;
+                            // let dist = (dx * dx + dy * dy).sqrt().max(1.0);
+                            // particle.vx += (dx / dist) * strength;
+                            // particle.vy += (dy / dist) * strength;
+                        }
                     }
 
                     match particle.element.kind() {
@@ -319,7 +341,9 @@ impl World {
                     }
 
                     let particle_after = self.particles_flat[index];
-                    particle_after.element.physics_tick(index, particle_after, self);
+                    particle_after
+                        .element
+                        .physics_tick(index, particle_after, self);
                 }
             }
         }

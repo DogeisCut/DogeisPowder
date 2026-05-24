@@ -38,6 +38,7 @@ fn main() {
     )
     .expect("Failed to create window :(");
 
+    //window.set_cursor_visibility(false);
     window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
     //window.limit_update_rate(None);
 
