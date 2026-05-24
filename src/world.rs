@@ -408,6 +408,7 @@ impl World {
                         StateOfMatter::Liquid => {
                             // Liquid seems to take stupidly long to settle for some reason
                             // TODO: look into how powder toy combats this. HINT: it isnt by making water move 2+ units instead of 1
+                            // Oddly enough this wasnt a problem back when i updated the particles by particles_flat instead of the grid
                             if settle_y != 0.0 && !self.try_move_particle_by(index, 0.0, settle_y) {
                                 if !self.try_move_particle_by(index, settle_x, settle_y) {
                                     if !self.try_move_particle_by(index, -settle_x, settle_y) {
