@@ -54,12 +54,14 @@ impl IndexGrid {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Edge {
     Stop,
     Loop,
     Destroy,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Gravity {
     None,
     Linear(f32, f32),
@@ -277,30 +279,85 @@ impl World {
 
                     let mut particle = self.particles_flat[index];
 
-                    if let Some(life) = particle.life.as_mut() {
-                        // Currently broken, life just doesn't do anything. Not sure if its because this is bugged or if setting the life value is bugged.
+                    if let Some(life) = self.particles_flat[index].life.as_mut() {
                         *life = life.saturating_sub(1);
                         if *life == 0 {
                             self.kill_particle(index);
                         }
                     }
 
-                    if particle.is_dead {
+                    if self.particles_flat[index].is_dead {
                         continue;
                     }
 
-                    match &self.gravity {
-                        Gravity::None => {}
-                        Gravity::Linear(gx, gy) => {
-                            //particle.vx += gx;
-                            //particle.vy += gy;
-                        }
+                    let gravity = self.gravity;
+                    let (gx, gy) = match gravity {
+                        Gravity::None => (0.0_f32, 0.0_f32),
+                        Gravity::Linear(gx, gy) => (gx, gy),
                         Gravity::Radial(cx, cy, strength) => {
-                            // let dx = cx - particle.x;
-                            // let dy = cy - particle.y;
-                            // let dist = (dx * dx + dy * dy).sqrt().max(1.0);
-                            // particle.vx += (dx / dist) * strength;
-                            // particle.vy += (dy / dist) * strength;
+                            let p = self.particles_flat[index];
+                            let dx = cx - p.x;
+                            let dy = cy - p.y;
+                            let dist = (dx * dx + dy * dy).sqrt().max(1.0);
+                            ((dx / dist) * strength, (dy / dist) * strength)
+                        }
+                    };
+                    self.particles_flat[index].vx += gx;
+                    self.particles_flat[index].vy += gy;
+
+                    let terminal_velocity: f32 = 15.0;
+                    self.particles_flat[index].vx = self.particles_flat[index]
+                        .vx
+                        .clamp(-terminal_velocity, terminal_velocity);
+                    self.particles_flat[index].vy = self.particles_flat[index]
+                        .vy
+                        .clamp(-terminal_velocity, terminal_velocity);
+
+                    let start_x_float = self.particles_flat[index].x;
+                    let start_y_float = self.particles_flat[index].y;
+                    let end_x_float = start_x_float + self.particles_flat[index].vx;
+                    let end_y_float = start_y_float + self.particles_flat[index].vy;
+
+                    let start_gx = f32_to_grid(start_x_float)
+                        .clamp(0, self.particles_grid.width as isize - 1)
+                        as usize;
+                    let start_gy = f32_to_grid(start_y_float)
+                        .clamp(0, self.particles_grid.height as isize - 1)
+                        as usize;
+                    let end_gx = f32_to_grid(end_x_float)
+                        .clamp(0, self.particles_grid.width as isize - 1)
+                        as usize;
+                    let end_gy = f32_to_grid(end_y_float)
+                        .clamp(0, self.particles_grid.height as isize - 1)
+                        as usize;
+
+                    let sub_x = start_x_float.fract();
+                    let sub_y = start_y_float.fract();
+
+                    if start_gx != end_gx || start_gy != end_gy {
+                        let mut hit_obstacle = false;
+                        let mut did_move = false;
+
+                        crate::raster::line(start_gx, start_gy, end_gx, end_gy, |lx, ly| {
+                            if hit_obstacle || (lx == start_gx && ly == start_gy) {
+                                return;
+                            }
+
+                            let target_f32_x = lx as f32 + sub_x;
+                            let target_f32_y = ly as f32 + sub_y;
+
+                            if self.try_move_particle(index, target_f32_x, target_f32_y) {
+                                did_move = true;
+                            } else {
+                                hit_obstacle = true;
+                                self.particles_flat[index].vx = 0.0;
+                                self.particles_flat[index].vy = 0.0;
+                            }
+                        });
+                    } else {
+                        if !self.try_move_particle(index, end_x_float, end_y_float) {
+                            self.particles_flat[index].vx = 0.0;
+                            self.particles_flat[index].vy = 0.0;
                         }
                     }
 
