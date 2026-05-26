@@ -3,7 +3,8 @@ use minifb::KeyRepeat::No;
 use crate::{
     color::Color,
     element::{Element, StateOfMatter},
-    particle::{self, Particle}, vector,
+    particle::{self, Particle},
+    vector,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -133,7 +134,6 @@ impl World {
                 true
             }
             CellState::Occupied(other_index) => {
-
                 if index == other_index {
                     let mut particle = self.particles_flat[index];
                     particle.x = target_x;
@@ -195,7 +195,7 @@ impl World {
 
     pub fn move_with_velocity(&mut self, index: usize) {
         let p = self.particles_flat[index];
-        
+
         let mag = crate::vector::magnitude_of((p.vx, p.vy));
         let steps = mag.ceil() as i32;
 
@@ -205,7 +205,7 @@ impl World {
 
         let dx = p.vx / steps as f32;
         let dy = p.vy / steps as f32;
-        
+
         let friction = p.element.friction();
         let restitution = p.element.restitution();
 
@@ -217,14 +217,18 @@ impl World {
                 let moved_x = self.try_move_particle_by(index, dx, 0.0);
                 let moved_y = self.try_move_particle_by(index, 0.0, dy);
 
-                if !moved_x { hit_x = true; }
-                if !moved_y { hit_y = true; }
-                
+                if !moved_x {
+                    hit_x = true;
+                }
+                if !moved_y {
+                    hit_y = true;
+                }
+
                 if !hit_x && !hit_y {
                     hit_x = true;
                     hit_y = true;
                 }
-                
+
                 if hit_x || hit_y {
                     break;
                 }
@@ -241,9 +245,13 @@ impl World {
             updated_p.vy *= -restitution;
             updated_p.vx *= 1.0 - friction;
         }
-        
-        if updated_p.vx.abs() < 0.01 { updated_p.vx = 0.0; }
-        if updated_p.vy.abs() < 0.01 { updated_p.vy = 0.0; }
+
+        if updated_p.vx.abs() < 0.01 {
+            updated_p.vx = 0.0;
+        }
+        if updated_p.vy.abs() < 0.01 {
+            updated_p.vy = 0.0;
+        }
 
         self.particles_flat[index] = updated_p;
     }
@@ -377,11 +385,14 @@ impl World {
                     };
 
                     match particle.element.kind() {
-                        StateOfMatter::Powder | StateOfMatter::Liquid | StateOfMatter::Gas | StateOfMatter::Energy => {
+                        StateOfMatter::Powder
+                        | StateOfMatter::Liquid
+                        | StateOfMatter::Gas
+                        | StateOfMatter::Energy => {
                             self.particles_flat[index].vx += gx;
                             self.particles_flat[index].vy += gy;
-                        },
-                        StateOfMatter::Solid => {},
+                        }
+                        StateOfMatter::Solid => {}
                     }
 
                     self.move_with_velocity(index);
@@ -389,13 +400,13 @@ impl World {
                     let particle_after = self.particles_flat[index];
 
                     let bias: f32 = if rand::random::<bool>() { 1.0 } else { -1.0 };
-                    // let settle_x = if particle_after.vx.abs() > 0.1 { particle_after.vx.signum() } else { bias };
-                    // let settle_y = if particle_after.vy.abs() > 0.1 { particle_after.vy.signum() } else { gy.signum() };
+                    let settle_x = if particle_after.vx.abs() > 0.1 { particle_after.vx.signum() } else { bias };
+                    let settle_y = if particle_after.vy.abs() > 0.1 { particle_after.vy.signum() } else { gy.signum() };
 
                     // something is wrong but im too stupid to figure it out, most notable in radial gravity
                     // also ideally we would use velocity not the direction of gravity for calculating this
-                    let vel_angle = vector::angle_of((gx, gy));
-                    let (settle_x, settle_y) = vector::rotated((1.0,bias), vel_angle);
+                    //let vel_angle = vector::angle_of((gx, gy));
+                    //let (settle_x, settle_y) = vector::rotated((1.0, bias), vel_angle);
 
                     match particle_after.element.kind() {
                         StateOfMatter::Powder => {
@@ -432,7 +443,7 @@ impl World {
                                 }
                             }
                         }
-                        StateOfMatter::Solid | StateOfMatter::Energy => { 
+                        StateOfMatter::Solid | StateOfMatter::Energy => {
                             // Nada
                         }
                     }

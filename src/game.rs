@@ -25,7 +25,10 @@ impl Game {
                     Action::UseTool,
                 ),
                 Tool::new(tool::Kind::Erase(), Action::UseSecondaryTool),
-                Tool::new(tool::Kind::Picker(), Action::UseTrinaryTool),
+                Tool::new(
+                    tool::Kind::Smear(Element::Sand, world::ParticleSpawnMode::EmptyOnly),
+                    Action::UseTrinaryTool,
+                ),
             ),
             world: World::new(width, height),
         }

@@ -139,7 +139,7 @@ impl Element {
     }
     pub fn friction(&self) -> f32 {
         match self {
-            Element::Sand => 0.8, 
+            Element::Sand => 0.8,
             Element::Wood => 0.5,
             Element::Water => 0.1,
             Element::Ice => 0.05,
